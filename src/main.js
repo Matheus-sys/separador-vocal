@@ -6,6 +6,7 @@ import { MODELOS } from './separacao/modelos.js';
 import { modeloEmCache } from './separacao/baixar.js';
 import { desenharOnda, calcularPicos } from './ui/onda.js';
 import { formatarTempo, formatarBytes, formatarDuracao } from './ui/formato.js';
+import { criarTutorialPlaca } from './ui/tutorial-placa.js';
 import { exportarProjeto, exportarPacote, importarProjetos, pareceZip, nomeSeguro } from './armazenamento/projeto.js';
 
 const $ = (id) => document.getElementById(id);
@@ -77,6 +78,10 @@ async function detectar() {
       $('placa-info').hidden = false;
       $('placa-info').textContent = `Placa de vídeo em uso: ${nome}`;
     }
+    // Windows usando a placa integrada (Intel): talvez exista uma NVIDIA/AMD que o navegador não pegou.
+    // O site não consegue forçar; mostra como configurar (tutorial animado). Mac com chip Apple não entra aqui.
+    const windows = navigator.userAgentData?.platform === 'Windows' || /Windows/.test(navigator.userAgent);
+    if (windows && !estado.celular && /intel/i.test(info?.vendor || '')) $('aviso-placa').hidden = false;
   }
   const radioQ = document.querySelector('input[name=modo][value=qualidade]');
   const radioR = document.querySelector('input[name=modo][value=rapido]');
@@ -945,6 +950,9 @@ function ligar() {
 
   $('btn-cancelar').addEventListener('click', () => estado.cancelar?.());
   $('btn-separar').addEventListener('click', iniciarSeparacao);
+  const tutorial = criarTutorialPlaca($('dlg-placa'));
+  $('btn-ver-como').addEventListener('click', () => tutorial.abrir());
+  $('tp-fechar').addEventListener('click', () => $('dlg-placa').close());
   $('btn-trocar').addEventListener('click', () => $('arquivo').click());
   $('btn-nova').addEventListener('click', () => {
     player.pausar();

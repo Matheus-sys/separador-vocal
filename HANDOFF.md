@@ -179,6 +179,9 @@ Máquina: i5-1235U, Intel Iris Xe, 16 GB, Chrome.
     do Matheus, 8 min de música estimavam 12 min. O worker pede `powerPreference: 'high-performance'` e passa o adaptador para
     `ort.env.webgpu.adapter`; a tela mostra "Placa de vídeo em uso". Se o Chrome no Windows ainda pegar a Intel, o jeito é
     Configurações do Windows → Sistema → Tela → Elementos gráficos → Chrome → Alto desempenho.
+    Desde 27/11 o app mostra um aviso no Windows com placa Intel e o botão **"Ver como (1 minuto)"**: um tutorial
+    animado (`src/ui/tutorial-placa.js`, 6 passos com cursor e legenda) com o botão "Copiar caminho" do chrome.exe/msedge.exe.
+    Os textos foram conferidos no Windows 11 25H2 em português. O site **não consegue** forçar a placa: só pedir.
 15. **Pasta `public/_teste/`** (MUSDB, a música de teste, zip de teste) é local e está no `.gitignore`. O `publicar.mjs` a tira do build.
 
 ---

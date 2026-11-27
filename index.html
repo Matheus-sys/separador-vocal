@@ -116,6 +116,13 @@
           </fieldset>
           <button type="button" class="btn-primario btn-separar" id="btn-separar" disabled>Escolha uma música primeiro</button>
           <p class="placa-info" id="placa-info" hidden></p>
+          <div class="aviso-placa" id="aviso-placa" hidden>
+            <p><b>Este computador está usando a placa de vídeo mais fraca (integrada).</b> Se ele tem placa NVIDIA ou AMD, dá para separar várias vezes mais rápido.</p>
+            <button type="button" class="btn-secundario" id="btn-ver-como">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+              Ver como (1 minuto)
+            </button>
+          </div>
           <p class="aviso" id="aviso-gpu" hidden></p>
           <p class="privacidade">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z" /></svg>
@@ -286,6 +293,30 @@
           <button type="submit" class="btn-primario" id="dlg-nome-ok">Baixar</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog id="dlg-placa" class="dialogo dialogo-tutorial" aria-labelledby="tp-titulo">
+      <div class="tp-cab">
+        <h2 id="tp-titulo">Usar a placa de vídeo mais rápida</h2>
+        <button type="button" class="btn-icone" id="tp-fechar" aria-label="Fechar">
+          <svg viewBox="0 0 24 24"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z" /></svg>
+        </button>
+      </div>
+      <div class="tp-palco" aria-hidden="true"></div>
+      <div class="tp-progresso"><span></span></div>
+      <p class="tp-legenda" aria-live="polite"></p>
+      <div class="tp-copiar" hidden>
+        <code class="tp-caminho"></code>
+        <button type="button" class="btn-secundario">Copiar caminho</button>
+      </div>
+      <div class="tp-controles">
+        <button type="button" class="btn-secundario" data-tp="anterior">‹ Anterior</button>
+        <button type="button" class="btn-primario" data-tp="play">Pausar</button>
+        <button type="button" class="btn-secundario" data-tp="repetir">Repetir passo</button>
+        <button type="button" class="btn-secundario" data-tp="proximo">Próximo ›</button>
+      </div>
+      <div class="tp-pontos" role="group" aria-label="Passos"></div>
+      <p class="tp-nota">Só precisa fazer uma vez. Vale para o Windows 11; no Windows 10 o caminho é parecido (Configurações › Sistema › Vídeo › Configurações de gráficos).</p>
     </dialog>
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
