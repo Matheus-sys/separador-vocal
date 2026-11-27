@@ -262,3 +262,19 @@ input[type='range'] { accent-color: var(--acento); width: 100%; min-height: 28px
 }
 .btn-perigo:hover:not(:disabled) { background: var(--acento-suave); }
 #bib-cancelar, #exp-cancelar { margin-top: 8px; }
+
+/* diálogo: nome do arquivo */
+.dialogo {
+  border: 1px solid var(--borda); border-radius: var(--raio); background: var(--cartao); color: var(--texto);
+  padding: 22px; width: min(440px, calc(100vw - 32px)); box-shadow: 0 16px 48px rgb(0 0 0 / 25%);
+}
+.dialogo::backdrop { background: rgb(0 0 0 / 45%); }
+.dialogo h2 { font-size: 1.1rem; }
+.campo-nome {
+  display: flex; align-items: center; margin-top: 14px; border: 1px solid var(--borda); border-radius: 10px;
+  background: var(--fundo); padding: 0 12px; min-height: 46px;
+}
+.campo-nome:focus-within { border-color: var(--acento); outline: 3px solid color-mix(in srgb, var(--acento) 30%, transparent); }
+.campo-nome input { flex: 1; min-width: 0; border: 0; background: transparent; color: inherit; font: inherit; padding: 10px 0; outline: none; }
+.campo-nome span { color: var(--texto-3); font-size: 0.95rem; }
+.dialogo-acoes { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }

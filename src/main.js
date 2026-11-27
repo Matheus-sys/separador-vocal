@@ -546,10 +546,51 @@ function projetoAtual() {
   return { meta: { ...estado.atual, sr: player.sr }, faixas: player.faixas, ajustes: ajustesAtuais() };
 }
 
-function exportarProjetoAtual() {
+/**
+ * Pergunta o nome do .zip antes de gerar. Devolve "nome.zip" ou null se a pessoa cancelar.
+ */
+function pedirNomeArquivo(sugestao, descricao) {
+  const dlg = $('dlg-nome');
+  const campo = $('campo-nome');
+  $('dlg-nome-desc').textContent = descricao;
+  campo.value = nomeSeguro(sugestao);
+  if (typeof dlg.showModal !== 'function') {
+    const r = prompt('Nome do arquivo (.zip):', campo.value);
+    return Promise.resolve(r == null ? null : nomeSeguro(r.replace(/\.zip$/i, '')) + '.zip');
+  }
+  return new Promise((resolve) => {
+    const fechar = (valor) => {
+      $('form-nome').onsubmit = null;
+      $('dlg-nome-cancelar').onclick = null;
+      dlg.oncancel = null;
+      if (dlg.open) dlg.close();
+      resolve(valor);
+    };
+    $('form-nome').onsubmit = (e) => {
+      e.preventDefault();
+      const nome = nomeSeguro(campo.value.replace(/\.zip$/i, ''));
+      fechar(nome + '.zip');
+    };
+    $('dlg-nome-cancelar').onclick = () => fechar(null);
+    dlg.oncancel = (e) => {
+      e.preventDefault();
+      fechar(null);
+    };
+    dlg.showModal();
+    campo.focus();
+    campo.select();
+  });
+}
+
+async function exportarProjetoAtual() {
+  const arquivo = await pedirNomeArquivo(
+    `${estado.atual.nome} - Ensaio Vocal`,
+    'O projeto leva as faixas e os ajustes. Dê um nome que ajude a encontrar depois.',
+  );
+  if (!arquivo) return;
   return tarefaEstudio(async (sinal, mostrar) => {
     const zip = await exportarProjeto(projetoAtual(), (f) => mostrar(`Gerando o projeto… ${Math.round(f * 100)}%`), sinal);
-    baixarBlob(new Blob([zip], { type: 'application/zip' }), `${nomeSeguro(estado.atual.nome)} - Ensaio Vocal.zip`);
+    baixarBlob(new Blob([zip], { type: 'application/zip' }), arquivo);
     mostrar(`${PRONTO} Para reabrir, solte o .zip no Ensaio Vocal, em qualquer computador.`);
   });
 }
@@ -656,8 +697,15 @@ async function carregarProjeto(id) {
   return { meta: m, faixas: m.faixas, ajustes: m.ajustes };
 }
 
-function baixarProjetos(ids) {
+async function baixarProjetos(ids) {
   if (!ids.length) return;
+  const arquivo = await pedirNomeArquivo(
+    ids.length === 1 ? `${nomeDe(ids[0])} - Ensaio Vocal` : `Ensaio Vocal - ${ids.length} projetos`,
+    ids.length === 1
+      ? 'O projeto leva as faixas e os ajustes. Dê um nome que ajude a encontrar depois.'
+      : `Um arquivo só com as ${ids.length} músicas selecionadas. Ex.: pacote_aluno_matheus`,
+  );
+  if (!arquivo) return;
   const botoes = [
     ...document.querySelectorAll('#biblioteca button:not(#bib-cancelar):not(#fechar-bib)'),
     ...document.querySelectorAll('#biblioteca input[type=checkbox]'),
@@ -668,14 +716,14 @@ function baixarProjetos(ids) {
       mostrar(`Preparando "${nome}"…`);
       const proj = await carregarProjeto(ids[0]);
       const zip = await exportarProjeto(proj, (f) => mostrar(`Gerando "${nome}"… ${Math.round(f * 100)}%`), sinal);
-      baixarBlob(new Blob([zip], { type: 'application/zip' }), `${nomeSeguro(nome)} - Ensaio Vocal.zip`);
+      baixarBlob(new Blob([zip], { type: 'application/zip' }), arquivo);
     } else {
       const zip = await exportarPacote(
         ids.map((id) => () => carregarProjeto(id)),
         (f, k) => mostrar(`Gerando ${k + 1} de ${ids.length}: "${nomeDe(ids[k])}"… ${Math.round(f * 100)}%`),
         sinal,
       );
-      baixarBlob(new Blob([zip], { type: 'application/zip' }), `Ensaio Vocal - ${ids.length} projetos.zip`);
+      baixarBlob(new Blob([zip], { type: 'application/zip' }), arquivo);
     }
     mostrar(PRONTO);
   });

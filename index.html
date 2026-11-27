@@ -235,6 +235,21 @@
       </details>
     </footer>
 
+    <dialog id="dlg-nome" class="dialogo" aria-labelledby="dlg-nome-titulo">
+      <form method="dialog" id="form-nome">
+        <h2 id="dlg-nome-titulo">Nome do arquivo</h2>
+        <p class="dica" id="dlg-nome-desc"></p>
+        <label class="campo-nome">
+          <input type="text" id="campo-nome" maxlength="80" autocomplete="off" spellcheck="false" required />
+          <span aria-hidden="true">.zip</span>
+        </label>
+        <div class="dialogo-acoes">
+          <button type="button" class="btn-secundario" id="dlg-nome-cancelar">Cancelar</button>
+          <button type="submit" class="btn-primario" id="dlg-nome-ok">Baixar</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     <script type="module" src="/src/main.js"></script>
   </body>
