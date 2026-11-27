@@ -10,6 +10,16 @@ const NOMES_FAIXA = ['voz', 'backing', 'instrumental'];
 // o cabeçalho LAME que avisaria o navegador. A importação desconta esse atraso.
 export const ATRASO_MP3 = 1105;
 
+// Limites para arquivos recebidos de terceiros (evita "bomba de zip" e alocações absurdas)
+export const LIMITES = {
+  jsonBytes: 64 * 1024, // projeto.json
+  mp3Bytes: 60 * 1024 * 1024, // cada faixa (~40 min a 192 kbps)
+  totalBytes: 600 * 1024 * 1024, // pacote inteiro descompactado
+  duracaoMax: 30 * 60, // 30 minutos por música
+  srMin: 8000,
+  srMax: 192000,
+};
+
 /** Nome de arquivo/pasta seguro em Windows, Mac e celular. */
 export function nomeSeguro(nome) {
   const s = String(nome || 'musica')
@@ -90,11 +100,28 @@ export function pareceZip(bytes) {
 export function lerArquivoProjeto(bytes) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   if (!pareceZip(b)) throw new Error('Esse arquivo não é um projeto do Ensaio Vocal (.zip).');
+  // só extrai o que o app usa, e confere o tamanho declarado ANTES de descompactar
+  let total = 0, grande = null;
+  const filtro = (f) => {
+    if (/(^|\/)(__MACOSX\/|\._)/.test(f.name)) return false;
+    const ehJson = /(^|\/)projeto\.json$/.test(f.name);
+    const ehMp3 = /(^|\/)(voz|backing|instrumental)\.mp3$/.test(f.name);
+    if (!ehJson && !ehMp3) return false;
+    const limite = ehJson ? LIMITES.jsonBytes : LIMITES.mp3Bytes;
+    total += f.originalSize;
+    if (f.originalSize > limite || total > LIMITES.totalBytes) grande = f.name;
+    return !grande;
+  };
   let arquivos;
   try {
-    arquivos = unzipSync(b);
+    arquivos = unzipSync(b, { filter: filtro });
   } catch {
     throw new Error('Não consegui abrir o .zip. O arquivo pode estar incompleto ou corrompido.');
+  }
+  if (grande) throw new Error('Esse .zip é grande demais ou tem arquivos fora do padrão do Ensaio Vocal.');
+  for (const [nome, dados] of Object.entries(arquivos)) {
+    const limite = nome.endsWith('.json') ? LIMITES.jsonBytes : LIMITES.mp3Bytes;
+    if (dados.length > limite) throw new Error('Esse .zip é grande demais ou tem arquivos fora do padrão do Ensaio Vocal.');
   }
   // ignora lixo que o Mac coloca ao recompactar (__MACOSX/, ._arquivo)
   const caminhos = Object.keys(arquivos).filter((c) => !/(^|\/)(__MACOSX\/|\._)/.test(c));
@@ -116,7 +143,13 @@ export function lerArquivoProjeto(bytes) {
     if (!Array.isArray(json.faixas) || !json.faixas.length || !json.faixas.every((f) => NOMES_FAIXA.includes(f))) {
       throw new Error(`O projeto "${json.nome}" tem uma lista de faixas inválida.`);
     }
-    if (!(json.sr > 0) || !(json.duracao > 0)) throw new Error(`O projeto "${json.nome}" não informa a duração.`);
+    if (!Number.isFinite(json.sr) || json.sr < LIMITES.srMin || json.sr > LIMITES.srMax) {
+      throw new Error(`O projeto "${json.nome}" tem uma taxa de amostragem inválida.`);
+    }
+    if (!Number.isFinite(json.duracao) || json.duracao <= 0 || json.duracao > LIMITES.duracaoMax) {
+      throw new Error(`O projeto "${json.nome}" tem duração inválida (máximo de 30 minutos).`);
+    }
+    if (typeof json.nome !== 'string' || typeof json.id !== 'string') throw new Error('O projeto.json está incompleto.');
     const mp3s = {};
     for (const f of json.faixas) {
       const dados = arquivos[prefixo + f + '.mp3'];

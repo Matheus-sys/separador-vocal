@@ -162,6 +162,10 @@ Máquina: i5-1235U, Intel Iris Xe, 16 GB, Chrome.
 12. **O Vite preserva `dist/.git`** ao limpar `dist/`. O `publicar.mjs` apaga essa pasta antes de `git init`.
 13. **Bash no Windows**: heredoc com aspas ou barras invertidas complexas quebra. Para editar código grande por script, grave o script num arquivo e rode.
 14. **`decodeAudioData` precisa de cópia** (`buf.slice(0)`), porque ele "consome" o ArrayBuffer.
+16. **Importar .zip de terceiros**: há limites em `LIMITES` (`projeto.js`). A importação só extrai `projeto.json` e
+    `voz|backing|instrumental.mp3`, confere o tamanho declarado **antes** de descompactar (64 KB para o json, 60 MB por
+    MP3, 600 MB no total), aceita `sr` de 8–192 kHz e duração de no máximo 30 min. Isso protege contra "bomba de zip"
+    num arquivo recebido de outra pessoa. Apontado por revisão de segurança automática em 27/11.
 15. **Pasta `public/_teste/`** (MUSDB, a música de teste, zip de teste) é local e está no `.gitignore`. O `publicar.mjs` a tira do build.
 
 ---

@@ -83,10 +83,23 @@ describe('arquivo de projeto', () => {
   it('recusa arquivo que não é zip, zip sem projeto, versão nova e faixa faltando', () => {
     expect(() => lerArquivoProjeto(strToU8('não sou zip'))).toThrow(/não é um projeto/);
     expect(() => lerArquivoProjeto(zipSync({ 'foto.jpg': strToU8('x') }))).toThrow(/falta o projeto.json/);
-    const base = { formato: 'ensaio-vocal', versao: 1, nome: 'X', sr: SR, duracao: 2, faixas: ['voz', 'instrumental'] };
+    const base = { formato: 'ensaio-vocal', versao: 1, id: 'y', nome: 'X', sr: SR, duracao: 2, faixas: ['voz', 'instrumental'] };
     expect(() => lerArquivoProjeto(zipSync({ 'projeto.json': strToU8(JSON.stringify({ ...base, versao: 9 })) }))).toThrow(/versão mais nova/);
     expect(() => lerArquivoProjeto(zipSync({ 'projeto.json': strToU8(JSON.stringify({ ...base, formato: 'outro' })) }))).toThrow(/não é um projeto/);
     expect(() => lerArquivoProjeto(zipSync({ 'projeto.json': strToU8(JSON.stringify(base)), 'voz.mp3': strToU8('x') }))).toThrow(/sem a faixa instrumental/);
+  });
+
+  it('recusa duração ou taxa absurdas e arquivo grande demais (zip bomb)', async () => {
+    const base = { formato: 'ensaio-vocal', versao: 1, id: 'z', nome: 'X', sr: SR, duracao: 2, faixas: ['voz'] };
+    const z = (j, extra = {}) => zipSync({ 'projeto.json': strToU8(JSON.stringify(j)), 'voz.mp3': strToU8('x'), ...extra });
+    expect(() => lerArquivoProjeto(z({ ...base, duracao: 1e9 }))).toThrow(/duração inválida/);
+    expect(() => lerArquivoProjeto(z({ ...base, sr: 1e9 }))).toThrow(/taxa de amostragem/);
+    // 61 MB de zeros compactam em poucos KB: o tamanho declarado é recusado antes de descompactar
+    const bomba = zipSync({ 'projeto.json': strToU8(JSON.stringify(base)), 'voz.mp3': [new Uint8Array(61 * 1024 * 1024), { level: 9 }] });
+    expect(bomba.length).toBeLessThan(1024 * 1024);
+    expect(() => lerArquivoProjeto(bomba)).toThrow(/grande demais/);
+    // arquivos estranhos dentro do zip são ignorados (não descompactados)
+    expect(lerArquivoProjeto(z(base, { 'video.mp4': new Uint8Array(10) }))).toHaveLength(1);
   });
 
   it('ignora o lixo que o Mac põe ao recompactar (__MACOSX)', async () => {
