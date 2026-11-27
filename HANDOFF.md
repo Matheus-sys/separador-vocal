@@ -175,6 +175,10 @@ Máquina: i5-1235U, Intel Iris Xe, 16 GB, Chrome.
 18. **Processamento de sinal fica em `dsp-worker.js`.** Na mesma thread do ONNX Runtime WebGPU ele não se sobrepunha à
     placa de vídeo, porque o ORT usa o JavaScript para despachar os comandos. Se o navegador não criar o worker interno, o mesmo
     cálculo roda no worker principal (código em `obterDsp()`).
+19. **Notebook com duas placas (Intel + NVIDIA).** O navegador entrega a integrada se ninguém pedir a outra: na RTX 3050
+    do Matheus, 8 min de música estimavam 12 min. O worker pede `powerPreference: 'high-performance'` e passa o adaptador para
+    `ort.env.webgpu.adapter`; a tela mostra "Placa de vídeo em uso". Se o Chrome no Windows ainda pegar a Intel, o jeito é
+    Configurações do Windows → Sistema → Tela → Elementos gráficos → Chrome → Alto desempenho.
 15. **Pasta `public/_teste/`** (MUSDB, a música de teste, zip de teste) é local e está no `.gitignore`. O `publicar.mjs` a tira do build.
 
 ---
