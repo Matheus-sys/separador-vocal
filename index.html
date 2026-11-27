@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Ensaio Vocal</title>
     <meta name="description" content="Separe a voz do instrumental e treine cantando. Tudo roda no seu computador, sem limite de uso." />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23d9534f'/><path d='M16 6a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0v-6a4 4 0 0 0-4-4zm-7 10a7 7 0 0 0 6 6.9V26h2v-3.1A7 7 0 0 0 23 16h-2a5 5 0 0 1-10 0z' fill='white'/></svg>" />
+    <meta name="theme-color" content="#f2efe9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141210" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231c1915'/><rect x='7' y='9' width='4' height='14' rx='1' fill='%23d9534f'/><rect x='14' y='13' width='4' height='10' rx='1' fill='%23c98a1b'/><rect x='21' y='6' width='4' height='17' rx='1' fill='%232f8f86'/></svg>" />
     <script>
       // O isolamento (COOP/COEP via service worker) só serve para o WASM com várias threads.
       // No Safari e no celular o app usa uma thread só, e com o service worker o ONNX Runtime
@@ -23,13 +25,11 @@
   </head>
   <body>
     <header class="topo">
-      <div class="marca">
-        <span class="logo" aria-hidden="true">
-          <svg viewBox="0 0 32 32"><path d="M16 6a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0v-6a4 4 0 0 0-4-4zm-7 10a7 7 0 0 0 6 6.9V26h2v-3.1A7 7 0 0 0 23 16h-2a5 5 0 0 1-10 0z" /></svg>
-        </span>
-        <div>
+      <div class="marca-app">
+        <span class="logo" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div class="marca-texto">
           <h1>Ensaio Vocal</h1>
-          <p class="sub">Separe a voz do instrumental e treine cantando, sem limite de uso.</p>
+          <p class="sub">Separe a voz e treine cantando</p>
         </div>
       </div>
       <button class="btn-fantasma" id="btn-biblioteca" aria-expanded="false" aria-controls="biblioteca">
@@ -38,14 +38,14 @@
       </button>
     </header>
 
-    <aside id="biblioteca" class="biblioteca" hidden>
+    <aside id="biblioteca" class="biblioteca" hidden aria-labelledby="bib-titulo">
       <div class="bib-cab">
-        <h2>Minhas músicas</h2>
+        <h2 id="bib-titulo">Minhas músicas</h2>
         <button class="btn-icone" id="fechar-bib" aria-label="Fechar">
-          <svg viewBox="0 0 24 24"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z" /></svg>
         </button>
       </div>
-      <p class="dica">Ficam guardadas neste navegador e abrem na hora. Para levar para outro computador ou mandar para alguém, baixe o projeto (.zip).</p>
+      <p class="dica">Ficam guardadas neste navegador. Para levar a outro computador ou mandar para alguém, baixe o projeto (.zip).</p>
       <div class="bib-topo">
         <button class="btn-secundario" id="bib-importar">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 20h2v-8.2l3.3 3.3 1.4-1.4L12 8 6.3 13.7l1.4 1.4 3.3-3.3zM5 4h14v2H5z" /></svg>
@@ -55,7 +55,7 @@
       </div>
       <div class="bib-selecao">
         <label><input type="checkbox" id="bib-sel-todas" /> Selecionar todas</label>
-        <span id="bib-qtd" class="dica"></span>
+        <span id="bib-qtd" class="bib-qtd"></span>
       </div>
       <ul id="lista-bib" class="lista-bib"></ul>
       <div class="bib-barra">
@@ -72,40 +72,51 @@
 
     <main>
       <!-- 1. Escolher música -->
-      <section id="etapa-arquivo" class="cartao">
+      <section id="etapa-arquivo" class="inicio" aria-label="Escolher música">
         <label class="soltar" id="soltar" tabindex="0">
           <input type="file" id="arquivo" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,.webm,.zip,application/zip" hidden />
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.6a4 4 0 1 0 2 3.4V7h4V3z" /></svg>
           <strong>Arraste uma música aqui</strong>
           <span>ou clique para escolher (MP3, WAV, M4A…), ou um projeto do Ensaio Vocal (.zip)</span>
+          <em class="soltar-acao" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M11 20h2v-8.2l3.3 3.3 1.4-1.4L12 8 6.3 13.7l1.4 1.4 3.3-3.3zM5 4h14v2H5z" /></svg>
+            Escolher arquivo
+          </em>
+          <svg class="soltar-onda" viewBox="0 0 239 40" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 13.1h2v13.8h-2zM3 11.5h2v17.0h-2zM6 14.5h2v11.0h-2zM9 8.8h2v22.5h-2zM12 14.5h2v10.9h-2zM15 8.1h2v23.9h-2zM18 12.1h2v15.8h-2zM21 9.7h2v20.5h-2zM24 8.0h2v24.0h-2zM27 12.2h2v15.6h-2zM30 4.8h2v30.4h-2zM33 12.9h2v14.3h-2zM36 4.7h2v30.6h-2zM39 10.5h2v18.9h-2zM42 7.7h2v24.6h-2zM45 6.7h2v26.6h-2zM48 11.4h2v17.2h-2zM51 4.3h2v31.4h-2zM54 12.9h2v14.1h-2zM57 5.3h2v29.3h-2zM60 11.6h2v16.9h-2zM63 9.1h2v21.9h-2zM66 9.0h2v22.0h-2zM69 12.9h2v14.2h-2zM72 7.8h2v24.4h-2zM75 14.6h2v10.7h-2zM78 9.0h2v21.9h-2zM81 14.0h2v12.1h-2zM84 12.0h2v16.1h-2zM87 12.2h2v15.6h-2zM90 14.7h2v10.5h-2zM93 10.9h2v18.1h-2zM96 15.9h2v8.2h-2zM99 11.1h2v17.7h-2zM102 15.0h2v10.0h-2zM105 12.6h2v14.7h-2zM108 12.6h2v14.8h-2zM111 14.5h2v11.0h-2zM114 10.2h2v19.7h-2zM117 15.2h2v9.5h-2zM120 9.2h2v21.7h-2zM123 13.8h2v12.4h-2zM126 10.3h2v19.4h-2zM129 10.4h2v19.1h-2zM132 12.5h2v14.9h-2zM135 7.1h2v25.7h-2zM138 13.8h2v12.4h-2zM141 6.1h2v27.7h-2zM144 12.4h2v15.1h-2zM147 8.1h2v23.7h-2zM150 9.1h2v21.7h-2zM153 11.5h2v17.0h-2zM156 6.3h2v27.3h-2zM159 13.6h2v12.8h-2zM162 6.3h2v27.4h-2zM165 13.0h2v14.0h-2zM168 9.2h2v21.7h-2zM171 10.8h2v18.4h-2zM174 12.8h2v14.3h-2zM177 9.2h2v21.6h-2zM180 15.1h2v9.9h-2zM183 9.8h2v20.4h-2zM186 15.1h2v9.9h-2zM189 12.3h2v15.5h-2zM192 13.8h2v12.5h-2zM195 15.0h2v10.0h-2zM198 12.7h2v14.5h-2zM201 16.6h2v6.8h-2zM204 12.9h2v14.1h-2zM207 16.6h2v6.9h-2zM210 14.3h2v11.5h-2zM213 15.2h2v9.7h-2zM216 15.7h2v8.7h-2zM219 13.5h2v13.0h-2zM222 16.7h2v6.6h-2zM225 12.8h2v14.3h-2zM228 16.4h2v7.2h-2zM231 13.6h2v12.8h-2zM234 14.8h2v10.3h-2zM237 15.2h2v9.7h-2z" />
+          </svg>
         </label>
 
-        <fieldset class="modos">
-          <legend>Como separar</legend>
-          <label class="modo">
-            <input type="radio" name="modo" value="qualidade" checked />
-            <span class="modo-corpo">
-              <span class="modo-titulo">Alta qualidade <em class="selo" id="selo-qualidade">recomendado</em></span>
-              <span class="modo-desc">Voz principal, backing vocal e instrumental. Usa a placa de vídeo. Baixa 240 MB na primeira vez.</span>
-            </span>
-          </label>
-          <label class="modo">
-            <input type="radio" name="modo" value="leve" />
-            <span class="modo-corpo">
-              <span class="modo-titulo">Leve / compatível</span>
-              <span class="modo-desc" id="modo-leve-desc">Voz e instrumental. Funciona em qualquer computador. Baixa 67 MB na primeira vez.</span>
-            </span>
-          </label>
-        </fieldset>
-        <p class="aviso" id="aviso-gpu" hidden></p>
-        <p class="privacidade">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z" /></svg>
-          A música não é enviada para lugar nenhum. A separação acontece no seu computador.
-        </p>
+        <div class="inicio-lado">
+          <fieldset class="modos">
+            <legend>Como separar</legend>
+            <label class="modo">
+              <input type="radio" name="modo" value="qualidade" checked />
+              <span class="modo-corpo">
+                <span class="modo-titulo">Alta qualidade <em class="selo" id="selo-qualidade">recomendado</em></span>
+                <span class="modo-faixas" aria-hidden="true"><i class="f-voz"></i><i class="f-backing"></i><i class="f-instrumental"></i></span>
+                <span class="modo-desc">Voz principal, backing vocal e instrumental. Usa a placa de vídeo. Baixa 240 MB na primeira vez.</span>
+              </span>
+            </label>
+            <label class="modo">
+              <input type="radio" name="modo" value="leve" />
+              <span class="modo-corpo">
+                <span class="modo-titulo">Leve / compatível</span>
+                <span class="modo-faixas" aria-hidden="true"><i class="f-voz"></i><i class="f-instrumental"></i></span>
+                <span class="modo-desc" id="modo-leve-desc">Voz e instrumental. Funciona em qualquer computador. Baixa 67 MB na primeira vez.</span>
+              </span>
+            </label>
+          </fieldset>
+          <p class="aviso" id="aviso-gpu" hidden></p>
+          <p class="privacidade">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z" /></svg>
+            A música não sai do seu computador. A separação acontece aqui mesmo.
+          </p>
+        </div>
       </section>
 
       <!-- 2. Progresso -->
-      <section id="etapa-progresso" class="cartao" hidden>
+      <section id="etapa-progresso" class="painel progresso" hidden>
+        <p class="rotulo">Processando</p>
         <h2 id="prog-titulo">Preparando…</h2>
         <p class="nome-musica" id="prog-nome"></p>
         <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-labelledby="prog-titulo" id="prog-barra"><span id="prog-preench"></span></div>
@@ -116,95 +127,124 @@
 
       <!-- 3. Estúdio -->
       <section id="etapa-estudio" hidden>
-        <div class="cartao estudio-cab">
+        <div class="estudio-cab">
           <div class="estudio-nome">
             <p class="rotulo">Tocando</p>
             <h2 id="nome-atual" class="nome-atual"></h2>
           </div>
-          <button class="btn-secundario" id="btn-nova">Separar outra música</button>
+          <button class="btn-secundario" id="btn-nova">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z" /></svg>
+            Separar outra música
+          </button>
         </div>
 
-        <div class="cartao">
+        <div class="painel deck">
+          <div class="visor">
+            <p class="relogio"><span id="t-atual">0:00</span><span class="relogio-sep" aria-hidden="true">/</span><span id="t-total">0:00</span></p>
+            <p class="dica-onda">Clique na onda para ir · arraste para marcar um trecho</p>
+          </div>
           <div class="onda-wrap">
             <canvas id="onda" role="img" aria-label="Forma de onda. Clique para ir a um ponto; arraste para marcar um trecho de repetição."></canvas>
           </div>
-          <div class="tempos"><span id="t-atual">0:00</span><span class="dica-onda">Clique para ir · arraste para marcar um trecho</span><span id="t-total">0:00</span></div>
 
-          <div class="transporte">
-            <button class="btn-icone" id="btn-voltar" title="Voltar 5 s (←)" aria-label="Voltar 5 segundos">
-              <svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6zm.5-6 8.5 6V6z" /></svg>
-            </button>
-            <button class="btn-play" id="btn-play" title="Tocar / pausar (espaço)" aria-label="Tocar">
-              <svg viewBox="0 0 24 24" id="ico-play"><path d="M8 5v14l11-7z" /></svg>
-            </button>
-            <button class="btn-icone" id="btn-avancar" title="Avançar 5 s (→)" aria-label="Avançar 5 segundos">
-              <svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6zm9-12v12l8.5-6z" /></svg>
-            </button>
-          </div>
+          <div class="comandos">
+            <div class="transporte">
+              <button class="btn-icone" id="btn-voltar" title="Voltar 5 s (←)" aria-label="Voltar 5 segundos">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18V6l-8.5 6zm.5-6 8.5 6V6z" /></svg>
+              </button>
+              <button class="btn-play" id="btn-play" title="Tocar / pausar (espaço)" aria-label="Tocar">
+                <svg viewBox="0 0 24 24" id="ico-play" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+              </button>
+              <button class="btn-icone" id="btn-avancar" title="Avançar 5 s (→)" aria-label="Avançar 5 segundos">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18l8.5-6L4 6zm9-12v12l8.5-6z" /></svg>
+              </button>
+            </div>
 
-          <div class="loop">
-            <button class="chip" id="btn-a" title="Marcar início do trecho no ponto atual (A)">A <span id="v-a">—</span></button>
-            <button class="chip" id="btn-b" title="Marcar fim do trecho no ponto atual (B)">B <span id="v-b">—</span></button>
-            <button class="chip alternar" id="btn-loop" aria-pressed="false" title="Repetir o trecho A-B (L)">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z" /></svg>
-              Repetir trecho
-            </button>
-            <button class="chip" id="btn-limpar-loop">Limpar trecho</button>
-            <label class="chip alternar-check"><input type="checkbox" id="chk-contagem" /> Contagem 1-2-3-4 antes de tocar</label>
+            <div class="loop" role="group" aria-label="Trecho de repetição">
+              <div class="ab">
+                <button class="tecla" id="btn-a" title="Marcar início do trecho no ponto atual (A)">A <span id="v-a">—</span></button>
+                <button class="tecla" id="btn-b" title="Marcar fim do trecho no ponto atual (B)">B <span id="v-b">—</span></button>
+              </div>
+              <button class="tecla alternar" id="btn-loop" aria-pressed="false" title="Repetir o trecho A-B (L)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z" /></svg>
+                Repetir trecho
+              </button>
+              <button class="tecla discreta" id="btn-limpar-loop">Limpar trecho</button>
+              <label class="contagem"><input type="checkbox" id="chk-contagem" /> Contagem 1-2-3-4 antes de tocar</label>
+            </div>
           </div>
         </div>
 
         <div class="grade">
-          <div class="cartao">
-            <h3>Faixas</h3>
+          <div class="painel mesa">
+            <div class="painel-cab">
+              <h3>Faixas</h3>
+              <span class="rotulo">Volume · 0–150%</span>
+            </div>
             <div id="mixer" class="mixer"></div>
-            <div class="predef">
+            <div class="predef" role="group" aria-label="Atalhos de mixagem">
               <span class="rotulo">Atalhos</span>
-              <button class="chip" data-predef="karaoke">Só instrumental</button>
-              <button class="chip" data-predef="guia">Voz baixinha de guia</button>
-              <button class="chip" data-predef="voz">Só a voz</button>
-              <button class="chip" data-predef="original">Original</button>
+              <div class="segmentos">
+                <button class="tecla" data-predef="karaoke">Só instrumental</button>
+                <button class="tecla" data-predef="guia">Voz baixinha de guia</button>
+                <button class="tecla" data-predef="voz">Só a voz</button>
+                <button class="tecla" data-predef="original">Original</button>
+              </div>
             </div>
           </div>
 
-          <div class="cartao">
-            <h3>Tom e velocidade</h3>
+          <div class="painel ajustes">
+            <div class="painel-cab">
+              <h3>Tom e velocidade</h3>
+            </div>
             <div class="controle">
               <div class="controle-cab">
                 <label for="tom">Tom</label>
-                <output id="v-tom" for="tom">original</output>
+                <output id="v-tom" for="tom" class="leitura">original</output>
               </div>
               <div class="passo">
-                <button class="btn-icone" id="tom-menos" aria-label="Descer meio tom">−</button>
-                <input type="range" id="tom" min="-12" max="12" step="1" value="0" />
-                <button class="btn-icone" id="tom-mais" aria-label="Subir meio tom">+</button>
+                <button class="btn-icone" id="tom-menos" aria-label="Descer meio tom">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11h14v2H5z" /></svg>
+                </button>
+                <div class="regua regua-tom">
+                  <input type="range" id="tom" min="-12" max="12" step="1" value="0" />
+                  <span class="regua-marcas" aria-hidden="true"><i>−12</i><i>0</i><i>+12</i></span>
+                </div>
+                <button class="btn-icone" id="tom-mais" aria-label="Subir meio tom">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z" /></svg>
+                </button>
               </div>
               <p class="dica">Sobe ou desce a música para caber na sua voz, sem mudar a velocidade.</p>
             </div>
             <div class="controle">
               <div class="controle-cab">
                 <label for="vel">Velocidade</label>
-                <output id="v-vel" for="vel">100%</output>
+                <output id="v-vel" for="vel" class="leitura">100%</output>
               </div>
-              <input type="range" id="vel" min="50" max="125" step="5" value="100" />
-              <div class="predef">
-                <button class="chip" data-vel="70">70%</button>
-                <button class="chip" data-vel="85">85%</button>
-                <button class="chip" data-vel="100">100%</button>
+              <div class="regua">
+                <input type="range" id="vel" min="50" max="125" step="5" value="100" />
+                <span class="regua-marcas" aria-hidden="true"><i>50%</i><i>125%</i></span>
+              </div>
+              <div class="segmentos vel-predef">
+                <button class="tecla" data-vel="70">70%</button>
+                <button class="tecla" data-vel="85">85%</button>
+                <button class="tecla" data-vel="100">100%</button>
               </div>
               <p class="dica">Mais devagar para treinar, sem mudar o tom.</p>
             </div>
             <button class="btn-secundario largo" id="btn-zerar">Voltar tom e velocidade ao original</button>
           </div>
 
-          <div class="cartao">
-            <h3>Baixar</h3>
-            <p class="dica">A mixagem sai com os volumes, o tom e a velocidade que estão agora.</p>
-            <div class="exportar">
-              <button class="btn-primario" id="exp-mix-mp3">Mixagem atual (MP3)</button>
-              <button class="btn-secundario" id="exp-mix-wav">Mixagem atual (WAV)</button>
+          <div class="painel baixar">
+            <div class="painel-cab">
+              <h3>Baixar</h3>
             </div>
-            <p class="rotulo">Faixas separadas (MP3, sem tom nem velocidade)</p>
+            <p class="dica">A mixagem sai com os volumes, o tom e a velocidade de agora.</p>
+            <div class="exportar">
+              <button class="btn-primario" id="exp-mix-mp3">Mixagem atual <span class="formato">MP3</span></button>
+              <button class="btn-secundario" id="exp-mix-wav">Mixagem atual <span class="formato">WAV</span></button>
+            </div>
+            <p class="rotulo">Faixas separadas · sem tom nem velocidade</p>
             <div id="exp-faixas" class="exportar"></div>
             <p class="rotulo">Projeto</p>
             <div class="exportar">
@@ -218,30 +258,18 @@
             <button class="btn-secundario" id="exp-cancelar" hidden>Cancelar</button>
           </div>
         </div>
-        <p class="dica atalhos">Atalhos: <kbd>espaço</kbd> toca/pausa · <kbd>←</kbd> <kbd>→</kbd> 5 s · <kbd>A</kbd> <kbd>B</kbd> marcam o trecho · <kbd>L</kbd> repete</p>
+        <p class="atalhos">Atalhos <kbd>espaço</kbd> toca/pausa · <kbd>←</kbd> <kbd>→</kbd> 5 s · <kbd>A</kbd> <kbd>B</kbd> marcam o trecho · <kbd>L</kbd> repete</p>
       </section>
     </main>
-
-    <footer class="rodape">
-      <details>
-        <summary>Sobre, créditos e licenças</summary>
-        <p>Ferramenta gratuita para estudo de canto. A separação roda no próprio navegador com <a href="https://onnxruntime.ai" target="_blank" rel="noopener">ONNX Runtime Web</a>.</p>
-        <ul>
-          <li>Modelo de alta qualidade: <a href="https://huggingface.co/musetric/mel-band-roformer-duality-kara2-student-onnx" target="_blank" rel="noopener">Mel-Band RoFormer Duality + KARA 2 student</a>, de musetric (Apache-2.0).</li>
-          <li>Modelo leve: MDX-Net Kim Vocal 2, do projeto Ultimate Vocal Remover.</li>
-          <li>Tom e velocidade: SoundTouch JS (LGPL-2.1). MP3: lamejs (LGPL-3.0).</li>
-        </ul>
-        <p>Use com músicas que você tem direito de usar para estudo. Nada é enviado para servidor.</p>
-      </details>
-    </footer>
 
     <dialog id="dlg-nome" class="dialogo" aria-labelledby="dlg-nome-titulo">
       <form method="dialog" id="form-nome">
         <h2 id="dlg-nome-titulo">Nome do arquivo</h2>
         <p class="dica" id="dlg-nome-desc"></p>
         <label class="campo-nome">
+          <span class="visualmente-oculto">Nome do arquivo</span>
           <input type="text" id="campo-nome" maxlength="80" autocomplete="off" spellcheck="false" required />
-          <span aria-hidden="true">.zip</span>
+          <span class="campo-ext" aria-hidden="true">.zip</span>
         </label>
         <div class="dialogo-acoes">
           <button type="button" class="btn-secundario" id="dlg-nome-cancelar">Cancelar</button>
@@ -252,5 +280,6 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     <script type="module" src="/src/main.js"></script>
+    <!-- Créditos e licenças de terceiros: ver TERCEIROS.md no repositório. -->
   </body>
 </html>

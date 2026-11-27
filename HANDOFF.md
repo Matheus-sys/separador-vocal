@@ -38,8 +38,9 @@ canto do Matheus, que quer usar com os alunos. Os apps online (vocalremover.org 
 |---|---|
 | Separação, mixer, tom, velocidade, loop, exportação, biblioteca | ✅ No ar e testado |
 | Correção do celular (crash no iPhone) | ✅ No ar (commit `15d3e01` + `08b47c9`) |
-| **Exportar e importar projeto, Limpar tudo, seleção, botão Cancelar** | ✅ Implementado e testado em dev (ver §8). **Publicação: ver §10** |
-| Refinamento visual "profissional, sem cara de IA" | ⏳ **Pedido pelo Matheus, ainda não feito.** Próximo passo (§11) |
+| **Exportar e importar projeto, Limpar tudo, seleção, botão Cancelar** | ✅ No ar e testado (ver §8) |
+| Refinamento visual "profissional, sem cara de IA" | ✅ No ar (27/11, especialista de front-end): visual de "estúdio de ensaio", fader vertical, régua na onda, Archivo + IBM Plex Mono. Rodapé de créditos removido (créditos ficam em `TERCEIROS.md`) |
+| Nome do .zip escolhido antes de baixar | ✅ No ar (diálogo "Nome do arquivo", ex.: `pacote_aluno_matheus`) |
 | Teste no Safari de verdade (Mac da professora / iPhone) | ⏳ Pendente: só foi testado no WebKit do Playwright, que no Windows não tem áudio |
 | Ouvir a qualidade da separação numa música real | ⏳ Pendente (amostras em `_amostras/`, que só existem na máquina original) |
 
@@ -56,6 +57,7 @@ canto do Matheus, que quer usar com os alunos. Os apps online (vocalremover.org 
 | Tom e velocidade | **soundtouchjs** | 0.1.30 (LGPL-2.1) | Time-stretch e pitch-shift em JS |
 | MP3 | **@breezystack/lamejs** | 1.2.7 (LGPL-3.0) | Codificador MP3 em JS |
 | Zip | **fflate** | 0.8.2 (MIT) | Ler e gravar o projeto .zip |
+| Fontes | **@fontsource-variable/archivo** + **@fontsource/ibm-plex-mono** | 5.3.0 (OFL) | Títulos (grotesca técnica com eixo de largura) e números (visor tabular). Empacotadas pelo Vite, **sem CDN**, porque o app promete que nada sai do computador |
 | Isolamento no Pages | **coi-serviceworker** | 0.1.7 (MIT) | O GitHub Pages não manda COOP/COEP; necessário para o WASM com várias threads |
 | Teste em navegador | **Playwright** (Chromium via MCP + WebKit via `playwright` 1.49.1) | — | Testes ponta a ponta e o motor do Safari |
 | Hospedagem | **GitHub Pages**, branch `gh-pages` (deploy from branch) | — | Grátis e estático |
@@ -223,14 +225,18 @@ gh auth switch --hostname github.com --user devcbbasfaltos # (só na máquina da
 Conferir: `gh api repos/Matheus-sys/separador-vocal/pages/builds/latest --jq .status` → `built`.
 
 ## 11. Direção e próximos passos (em ordem)
-1. **Refinamento visual "profissional, sem cara de IA"** (pedido do Matheus em 27/11/2026). Diretrizes já combinadas:
-   - manter a identidade: vermelho-coral (acento), cores por faixa (voz coral, backing âmbar, instrumental verde-azulado), tema claro e escuro;
-   - fugir do genérico: nada de gradiente roxo, emoji, cartão com sombra exagerada ou texto de marketing. Tipografia com personalidade
-     (ex.: uma serifada ou grotesca distinta só nos títulos), hierarquia mais forte no estúdio (o player é o herói),
-     controles com cara de equipamento de áudio (faders verticais no mixer, por exemplo), microinterações discretas,
-     `prefers-reduced-motion` respeitado;
-   - não quebrar: IDs usados no `main.js`, acessibilidade (rótulos, foco visível, alvos de 44 px), layout em 390 px;
-   - validar com screenshots em 1366 e 390 px, nos dois temas.
-2. Teste real no Safari (Mac e iPhone).
-3. Exportação de projeto em Worker (velocidade).
-4. Talvez: compartilhar projeto por link (exigiria um servidor; hoje é só arquivo), e mostrar a letra da música.
+1. ~~Refinamento visual~~ ✅ feito em 27/11. Linguagem visual atual, para manter:
+   - superfícies planas com fio de 1 px, sem sombra; papel quente `#f2efe9` no claro e grafite `#141210` no escuro;
+     acento coral (`#c4433b` claro, `#ef6a5f` escuro); cores das faixas: voz coral, backing âmbar, instrumental verde-azulado;
+   - **Archivo** (títulos e rótulos condensados de equipamento) + **IBM Plex Mono** (toda leitura numérica) + system-ui no texto;
+   - estúdio: relógio grande, onda com régua e etiquetas A/B; mixer como console (fader vertical = `range` girado
+     com `transform`, Mudo/Solo de 44 px); tom e velocidade com leitura grande;
+   - movimento só de 0,12 s, desligado por `prefers-reduced-motion`;
+   - **não testado:** fader e `range` no Safari/WebKit real e no Firefox (`::-moz-range-progress`).
+   - Capturas de referência: `_amostras/design/` (só na máquina original; fora do git).
+2. **YouTube por link** (pedido 27/11): **não** pôr no site público. Exige servidor ou ajudante local com `yt-dlp`,
+   o YouTube bloqueia servidores e baixar viola os termos de uso. Alternativa sugerida, se o Matheus quiser: um script
+   **local, de uso pessoal**, que recebe o link, baixa o áudio e abre no Ensaio Vocal.
+3. Teste real no Safari (Mac e iPhone).
+4. Exportação de projeto em Worker (velocidade).
+5. Talvez: compartilhar projeto por link (exigiria um servidor; hoje é só arquivo), e mostrar a letra da música.

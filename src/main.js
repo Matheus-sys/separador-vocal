@@ -307,15 +307,18 @@ function montarMixer() {
     const linha = document.createElement('div');
     linha.className = 'faixa';
     linha.dataset.faixa = k;
+    linha.style.setProperty('--cor', `var(${CORES[k]})`);
     const idSlider = 'vol-' + k;
     linha.innerHTML = `
-      <span class="cor" style="background: var(${CORES[k]})"></span>
       <label class="nome" for="${idSlider}">${rotulo(k)}</label>
-      <span class="valor"></span>
-      <div class="linha">
-        <input type="range" id="${idSlider}" min="0" max="150" step="1" />
-        <button class="chip" data-acao="mudo" aria-pressed="false" title="Silenciar">Mudo</button>
-        <button class="chip" data-acao="solo" aria-pressed="false" title="Ouvir só esta">Solo</button>
+      <span class="valor" aria-hidden="true"></span>
+      <div class="fader">
+        <span class="escala" aria-hidden="true"><i style="--m: 1">150</i><i class="unidade" style="--m: 0.6667">100</i><i style="--m: 0.3333">50</i><i style="--m: 0">0</i></span>
+        <span class="fader-trilho"><input type="range" id="${idSlider}" min="0" max="150" step="1" aria-orientation="vertical" /></span>
+      </div>
+      <div class="ms">
+        <button class="tecla" data-acao="mudo" aria-pressed="false" title="Silenciar" aria-label="Mudo: ${rotulo(k)}">Mudo</button>
+        <button class="tecla" data-acao="solo" aria-pressed="false" title="Ouvir só esta" aria-label="Solo: ${rotulo(k)}">Solo</button>
       </div>`;
     const slider = linha.querySelector('input');
     slider.value = Math.round((player.volume[k] ?? 1) * 100);
@@ -341,6 +344,7 @@ function atualizarMixerUI() {
     const k = linha.dataset.faixa;
     linha.querySelector('input').value = Math.round(player.volume[k] * 100);
     linha.querySelector('.valor').textContent = `${Math.round(player.volume[k] * 100)}%`;
+    linha.style.setProperty('--p', `${((player.volume[k] * 100) / 150) * 100}%`);
     linha.querySelector('[data-acao=mudo]').setAttribute('aria-pressed', String(!!player.mudo[k]));
     linha.querySelector('[data-acao=solo]').setAttribute('aria-pressed', String(!!player.solo[k]));
     linha.classList.toggle('silenciada', player._ganhoAlvo(k) === 0);
@@ -464,14 +468,16 @@ function definirTom(v) {
   v = Math.max(-12, Math.min(12, v));
   $('tom').value = v;
   player.definirTom(v);
-  $('v-tom').textContent = v === 0 ? 'original' : `${v > 0 ? '+' : ''}${v} ${Math.abs(v) === 1 ? 'semitom' : 'semitons'}`;
+  const num = v === 0 ? '0' : `${v > 0 ? '+' : '−'}${Math.abs(v)}`;
+  const un = v === 0 ? 'original' : Math.abs(v) === 1 ? 'semitom' : 'semitons';
+  $('v-tom').innerHTML = `<b>${num}</b> <small>${un}</small>`;
   agendarAjustes();
 }
 function definirVel(p) {
   p = Math.max(50, Math.min(125, p));
   $('vel').value = p;
   player.definirVelocidade(p / 100);
-  $('v-vel').textContent = `${p}%`;
+  $('v-vel').innerHTML = `<b>${p}</b><small>%</small>`;
   document.querySelectorAll('[data-vel]').forEach((b) => b.classList.toggle('ativo', +b.dataset.vel === p));
   agendarAjustes();
 }
@@ -601,7 +607,7 @@ function montarExportFaixas() {
   for (const k of Object.keys(player.faixas)) {
     const b = document.createElement('button');
     b.className = 'btn-secundario';
-    b.innerHTML = `<span class="bolinha" style="background: var(${CORES[k]})"></span> ${rotulo(k)}`;
+    b.innerHTML = `<span class="bolinha" style="background: var(${CORES[k]})"></span> ${rotulo(k)} <span class="formato">MP3</span>`;
     b.addEventListener('click', () => exportarFaixa(k));
     box.appendChild(b);
   }
