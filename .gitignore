@@ -12,3 +12,4 @@ _amostras/
 .playwright-mcp/
 __pycache__/
 .publicar-tmp/
+teste-*.html

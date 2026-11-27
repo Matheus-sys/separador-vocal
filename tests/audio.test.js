@@ -40,6 +40,28 @@ describe('tom e velocidade (offline)', () => {
   });
 });
 
+describe('leitura de WAV', () => {
+  it('lê o WAV de 16 bits que o próprio app exporta', async () => {
+    const { wavDe } = await import('../src/audio/exportar.js');
+    const { lerWav } = await import('../src/audio/decodificar.js');
+    const L = Float32Array.from({ length: 1000 }, (_, i) => Math.sin(i / 10) * 0.5);
+    const R = Float32Array.from({ length: 1000 }, (_, i) => Math.cos(i / 10) * 0.5);
+    const buf = await wavDe([L, R], 44100).arrayBuffer();
+    const [l, r] = lerWav(buf);
+    expect(l.length).toBe(1000);
+    for (let i = 0; i < 1000; i++) {
+      expect(Math.abs(l[i] - L[i])).toBeLessThan(1e-4);
+      expect(Math.abs(r[i] - R[i])).toBeLessThan(1e-4);
+    }
+  });
+  it('recusa WAV com outra taxa (cai para o decodificador do navegador)', async () => {
+    const { wavDe } = await import('../src/audio/exportar.js');
+    const { lerWav } = await import('../src/audio/decodificar.js');
+    const buf = await wavDe([new Float32Array(10), new Float32Array(10)], 48000).arrayBuffer();
+    expect(lerWav(buf)).toBeNull();
+  });
+});
+
 describe('mistura', () => {
   it('soma as faixas com os volumes e ignora faixa em zero', () => {
     const a = [Float32Array.of(1, 1), Float32Array.of(1, 1)];

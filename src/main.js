@@ -45,7 +45,18 @@ function nomeBase(nome) {
 }
 
 // ---------- capacidade do navegador ----------
+// Celular e tablet: o sistema fecha a aba quando a página passa do limite de memória
+// (no iPhone aparece "Um problema ocorreu repetidamente"). O modelo grande não cabe.
+export function ehCelular() {
+  const ua = navigator.userAgent || '';
+  if (navigator.userAgentData?.mobile) return true;
+  if (/iPhone|iPad|iPod|Android|Mobile/i.test(ua)) return true;
+  // iPad com iPadOS se apresenta como Mac; a diferença é a tela de toque
+  return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+}
+
 async function detectar() {
+  estado.celular = ehCelular();
   try {
     estado.webgpu = !!(navigator.gpu && (await navigator.gpu.requestAdapter()));
   } catch {
@@ -53,7 +64,19 @@ async function detectar() {
   }
   const radioQ = document.querySelector('input[name=modo][value=qualidade]');
   const radioL = document.querySelector('input[name=modo][value=leve]');
-  if (!estado.webgpu) {
+  if (estado.celular) {
+    radioQ.disabled = true;
+    radioL.checked = true;
+    $('selo-qualidade').textContent = 'só no computador';
+    const aviso = $('aviso-gpu');
+    aviso.hidden = false;
+    aviso.textContent =
+      'Você está no celular. Separar música é pesado demais para o celular e o navegador pode fechar a página. ' +
+      'O ideal é separar no computador (Windows ou Mac). Se quiser tentar aqui, use o modo Leve com uma música curta.';
+    $('modo-leve-desc').textContent = 'Voz e instrumental. No celular é experimental: pode demorar ou fechar a página.';
+    $('soltar').querySelector('strong').textContent = 'Toque para escolher uma música';
+    $('soltar').querySelector('span').textContent = 'MP3, WAV, M4A…';
+  } else if (!estado.webgpu) {
     radioQ.disabled = true;
     radioL.checked = true;
     $('selo-qualidade').textContent = 'indisponível aqui';
@@ -64,6 +87,7 @@ async function detectar() {
       'No Mac, use o Safari atualizado ou o Chrome. No Windows, use o Chrome ou o Edge atualizados.';
   }
   for (const m of Object.values(MODELOS)) {
+    if (estado.celular) break;
     if (await modeloEmCache(m.arquivos, location.href)) {
       const desc = document.querySelector(`input[name=modo][value=${m.id}]`)?.closest('.modo')?.querySelector('.modo-desc');
       if (desc) desc.textContent = desc.textContent.replace(/Baixa .* na primeira vez\./, 'Modelo já baixado.');
@@ -106,9 +130,14 @@ async function processarArquivo(arquivo) {
     mostrarEtapa('arquivo');
     return;
   }
+  if (estado.celular && buf.byteLength > 12 * 1024 * 1024) {
+    toast('Essa música é grande demais para separar no celular. Use o computador ou uma música mais curta.', true, 9000);
+    mostrarEtapa('arquivo');
+    return;
+  }
   const id = await bib.idDoArquivo(buf, modeloId);
   try {
-    const salva = await bib.abrirMusica(id);
+    const salva = (await bib.existe(id)) ? await bib.abrirMusica(id) : null;
     if (salva) {
       abrirNoEstudio(salva.faixas, { id, nome: salva.nome, modeloId }, salva.sr);
       toast('Essa música já estava separada. Abri da biblioteca.');
@@ -164,7 +193,16 @@ async function processarArquivo(arquivo) {
       } else if (m.tipo === 'pronto') {
         resolve(m);
       } else if (m.tipo === 'erro') {
-        toast('Deu erro na separação: ' + m.mensagem, true, 10000);
+        const semMemoria = /out of memory|memory|alloc/i.test(m.mensagem);
+        toast(
+          semMemoria
+            ? 'Faltou memória para separar. Feche outras abas e programas e tente de novo' +
+                (estado.celular ? ', ou separe no computador.' : ', ou use o modo Leve.')
+            : 'Deu erro na separação: ' + m.mensagem,
+          true,
+          12000,
+        );
+        novoWorker(); // começa limpo na próxima tentativa
         resolve(null);
       }
     };
@@ -324,9 +362,13 @@ function marcar(qual) {
 }
 
 async function alternarPlay() {
-  if (player.tocando) player.pausar();
-  else if ($('chk-contagem').checked) await player.contagemETocar(90, 4);
-  else await player.tocar();
+  try {
+    if (player.tocando) player.pausar();
+    else if ($('chk-contagem').checked) await player.contagemETocar(90, 4);
+    else await player.tocar();
+  } catch {
+    toast('Não consegui tocar o áudio neste navegador. Use o Chrome, o Edge ou o Safari atualizados.', true, 8000);
+  }
   atualizarPlayUI();
 }
 

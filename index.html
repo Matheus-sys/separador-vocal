@@ -6,6 +6,18 @@
     <title>Ensaio Vocal</title>
     <meta name="description" content="Separe a voz do instrumental e treine cantando. Tudo roda no seu computador, sem limite de uso." />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23d9534f'/><path d='M16 6a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0v-6a4 4 0 0 0-4-4zm-7 10a7 7 0 0 0 6 6.9V26h2v-3.1A7 7 0 0 0 23 16h-2a5 5 0 0 1-10 0z' fill='white'/></svg>" />
+    <script>
+      // O isolamento (COOP/COEP via service worker) só serve para o WASM com várias threads.
+      // No Safari e no celular o app usa uma thread só, e com o service worker o ONNX Runtime
+      // estoura a memória no WebKit. Nesses casos o service worker é desligado (e removido se já existia).
+      (function () {
+        var ua = navigator.userAgent || '';
+        var safari = /Safari/.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|Edg|Android/.test(ua);
+        var movel = /iPhone|iPad|iPod|Android|Mobile/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        var usar = !(safari || movel);
+        window.coi = { shouldRegister: function () { return usar; }, shouldDeregister: function () { return !usar; }, quiet: true };
+      })();
+    </script>
     <script src="coi-serviceworker.min.js"></script>
     <link rel="stylesheet" href="/src/estilo.css" />
   </head>
@@ -61,7 +73,7 @@
             <input type="radio" name="modo" value="leve" />
             <span class="modo-corpo">
               <span class="modo-titulo">Leve / compatível</span>
-              <span class="modo-desc">Voz e instrumental. Funciona em qualquer computador. Baixa 67 MB na primeira vez.</span>
+              <span class="modo-desc" id="modo-leve-desc">Voz e instrumental. Funciona em qualquer computador. Baixa 67 MB na primeira vez.</span>
             </span>
           </label>
         </fieldset>

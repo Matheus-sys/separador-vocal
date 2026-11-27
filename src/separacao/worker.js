@@ -6,7 +6,13 @@ import { planejarPedacos, pesoPedaco, recortar, criarAcumulador } from './janela
 import { roformerEntrada, roformerSaida, mdxEntrada, mdxSaida } from './processar.js';
 
 ort.env.logLevel = 'error';
-if (self.crossOriginIsolated) ort.env.wasm.numThreads = Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 4) - 1));
+// Safari (Mac e iPhone) e celulares: o WebAssembly com várias threads reserva memória compartilhada
+// grande e o WebKit recusa ("RangeError: Out of memory"). Nesses casos, uma thread só.
+const UA = navigator.userAgent || '';
+const ehSafari = /Safari/.test(UA) && !/Chrome|Chromium|CriOS|FxiOS|Edg|Android/.test(UA);
+const ehMovel = /iPhone|iPad|iPod|Android|Mobile/.test(UA);
+ort.env.wasm.numThreads =
+  self.crossOriginIsolated && !ehSafari && !ehMovel ? Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 4) - 1)) : 1;
 
 let sessaoAtual = null; // { id, sessao, ep }
 
@@ -63,7 +69,8 @@ async function carregarSessao(modelo, base) {
 }
 
 async function separar({ modeloId, canais, base, normalizar = true }) {
-  ort.env.wasm.wasmPaths = new URL('ort/', base).href;
+  // produção: motor solto em /ort/ (ver vite.config.js). No dev o Vite não deixa importar de public/.
+  if (!import.meta.env.DEV) ort.env.wasm.wasmPaths = new URL('ort/', base).href;
   const modelo = MODELOS[modeloId];
   // o modelo foi validado com a música normalizada no pico 0,9; volta à escala original no fim
   let pico = 0;
@@ -129,21 +136,23 @@ async function separar({ modeloId, canais, base, normalizar = true }) {
 
   const vozTotal = accVoz.finalizar();
   if (escala !== 1) for (const v of vozTotal) for (let i = 0; i < v.length; i++) v[i] /= escala;
-  const instrumental = canais.map((c, i) => {
-    const out = new Float32Array(total);
-    for (let j = 0; j < total; j++) out[j] = c[j] - vozTotal[i][j];
-    return out;
-  });
-  const faixas = { instrumental };
+  // calcula no lugar (sem cópias novas) para economizar memória:
+  // instrumental = mistura − voz, gravado por cima da mistura
+  for (let i = 0; i < canais.length; i++) {
+    const c = canais[i], v = vozTotal[i];
+    for (let j = 0; j < total; j++) c[j] -= v[j];
+  }
+  const faixas = { instrumental: canais };
   if (accBack) {
     const backing = accBack.finalizar();
     if (escala !== 1) for (const v of backing) for (let i = 0; i < v.length; i++) v[i] /= escala;
     faixas.backing = backing;
-    faixas.voz = vozTotal.map((v, i) => {
-      const out = new Float32Array(total);
-      for (let j = 0; j < total; j++) out[j] = v[j] - backing[i][j];
-      return out;
-    });
+    // voz principal = voz − backing, gravado por cima da voz
+    for (let i = 0; i < vozTotal.length; i++) {
+      const v = vozTotal[i], b = backing[i];
+      for (let j = 0; j < total; j++) v[j] -= b[j];
+    }
+    faixas.voz = vozTotal;
   } else {
     faixas.voz = vozTotal;
   }
