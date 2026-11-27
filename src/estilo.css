@@ -530,3 +530,4 @@ input[type='range']:focus-visible::-moz-range-thumb { border-color: var(--acento
 .selo-rapido { color: var(--instrumental); border-color: color-mix(in srgb, var(--instrumental) 55%, transparent); }
 .modo:has(input:checked) .selo-rapido { color: var(--instrumental); border-color: var(--instrumental); }
 .btn-separar { width: 100%; min-height: 52px; font-size: 1.05rem; }
+.placa-info { margin: 0; color: var(--texto-3); font: 400 0.78rem var(--f-num); overflow-wrap: anywhere; }

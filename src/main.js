@@ -59,10 +59,24 @@ export function ehCelular() {
 
 async function detectar() {
   estado.celular = ehCelular();
+  let adaptador = null;
   try {
-    estado.webgpu = !!(navigator.gpu && (await navigator.gpu.requestAdapter()));
+    if (navigator.gpu) {
+      adaptador =
+        (await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' })) || (await navigator.gpu.requestAdapter());
+    }
   } catch {
-    estado.webgpu = false;
+    adaptador = null;
+  }
+  estado.webgpu = !!adaptador;
+  if (adaptador) {
+    let info = adaptador.info;
+    if (!info && adaptador.requestAdapterInfo) info = await adaptador.requestAdapterInfo().catch(() => null);
+    const nome = [info?.vendor, info?.architecture, info?.description].filter(Boolean).join(' ').trim();
+    if (nome) {
+      $('placa-info').hidden = false;
+      $('placa-info').textContent = `Placa de vídeo em uso: ${nome}`;
+    }
   }
   const radioQ = document.querySelector('input[name=modo][value=qualidade]');
   const radioR = document.querySelector('input[name=modo][value=rapido]');
@@ -246,7 +260,8 @@ async function iniciarSeparacao() {
         } else if (m.etapa === 'carregando') {
           progresso('Preparando o modelo…', null, 'Isso leva alguns segundos.');
         } else if (m.etapa === 'separando') {
-          if (m.feito === 0 || !t0) {
+          // o 1º pedaço inclui o aquecimento da placa de vídeo: a velocidade só é medida a partir do 2º
+          if (m.feito <= 1 || !t0) {
             t0 = performance.now();
             feitoInicial = m.feito;
           }
@@ -255,8 +270,11 @@ async function iniciarSeparacao() {
             const porParte = (performance.now() - t0) / (m.feito - feitoInicial);
             const resta = (m.total - m.feito) * porParte;
             det += ` · falta ~${formatarDuracao(resta / 1000)}`;
+          } else {
+            det += ' · calculando o tempo…';
           }
           if (m.ep === 'wasm') det += ' · sem placa de vídeo (mais lento)';
+          else if (m.placa) det += ` · placa: ${m.placa}`;
           progresso('Separando voz e instrumental…', m.feito / m.total, det);
         }
       } else if (m.tipo === 'pronto') {

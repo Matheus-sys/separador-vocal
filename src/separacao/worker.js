@@ -18,12 +18,31 @@ let sessaoAtual = null; // { id, sessao, ep }
 
 const enviar = (m, t) => self.postMessage(m, t || []);
 
-async function temWebGPU() {
+// Notebook com duas placas (Intel + NVIDIA/AMD): sem pedir, o navegador entrega a integrada, que é
+// várias vezes mais lenta. Pede a de alto desempenho e entrega ao ONNX Runtime.
+let adaptador; // undefined = ainda não pediu; null = não tem
+let nomePlaca = '';
+async function obterAdaptador() {
+  if (adaptador !== undefined) return adaptador;
+  adaptador = null;
   try {
-    return !!(navigator.gpu && (await navigator.gpu.requestAdapter()));
+    if (navigator.gpu) {
+      adaptador =
+        (await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' })) || (await navigator.gpu.requestAdapter());
+    }
   } catch {
-    return false;
+    adaptador = null;
   }
+  if (adaptador) {
+    let info = adaptador.info;
+    if (!info && adaptador.requestAdapterInfo) info = await adaptador.requestAdapterInfo().catch(() => null);
+    nomePlaca = [info?.vendor, info?.architecture, info?.description].filter(Boolean).join(' ').trim();
+  }
+  return adaptador;
+}
+
+async function temWebGPU() {
+  return !!(await obterAdaptador());
 }
 
 async function carregarSessao(modelo, base) {
@@ -46,9 +65,10 @@ async function carregarSessao(modelo, base) {
   enviar({ tipo: 'progresso', etapa: 'carregando', feito: 0, total: 1 });
   const gpu = await temWebGPU();
   if (modelo.precisaWebGPU && !gpu) {
-    throw new Error('Este computador/navegador não tem WebGPU. Use o modo "Leve / compatível".');
+    throw new Error('Este computador/navegador não tem WebGPU. Use o modo "Rápido".');
   }
   const ep = gpu ? 'webgpu' : 'wasm';
+  if (gpu && adaptador) ort.env.webgpu.adapter = adaptador; // vale só antes da 1ª sessão (o worker é reaproveitado)
   const opcoes = {
     executionProviders: ep === 'webgpu' ? [{ name: 'webgpu', storageBufferCacheMode: 'simple' }] : ['wasm'],
     graphOptimizationLevel: 'all',
@@ -140,7 +160,7 @@ async function separar({ modeloId, canais, base, normalizar = true }) {
   const inicios = planejarPedacos(total, tam, sob);
   const accVoz = criarAcumulador(total, 2);
   const accBack = modelo.tipo === 'roformer' ? criarAcumulador(total, 2) : null;
-  enviar({ tipo: 'progresso', etapa: 'separando', feito: 0, total: inicios.length, ep });
+  enviar({ tipo: 'progresso', etapa: 'separando', feito: 0, total: inicios.length, ep, placa: nomePlaca });
 
   // Preparação (STFT) e finalização (iSTFT) rodam num SEGUNDO worker (dsp-worker.js), em paralelo
   // com a placa de vídeo: enquanto o modelo roda o pedaço k, ele prepara o k+1 e finaliza o k-1.
@@ -181,7 +201,7 @@ async function separar({ modeloId, canais, base, normalizar = true }) {
     finalizacoes.push(
       dsp.pedir({ op: 'finalizar', k, modelo: infoModelo, saida, frames, tam }, [saida.buffer]).then((res) => somar(k, res)),
     );
-    enviar({ tipo: 'progresso', etapa: 'separando', feito: k + 1, total: inicios.length, ep, tempos });
+    enviar({ tipo: 'progresso', etapa: 'separando', feito: k + 1, total: inicios.length, ep, tempos, placa: nomePlaca });
   }
   await Promise.all(finalizacoes);
 
