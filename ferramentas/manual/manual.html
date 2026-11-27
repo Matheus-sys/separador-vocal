@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Ensaio Vocal: guia rápido</title>
+<style>
+  @font-face { font-family: 'Archivo'; src: url('../../node_modules/@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2') format('woff2'); font-weight: 100 900; font-stretch: 62% 125%; }
+  @font-face { font-family: 'Plex Mono'; src: url('../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2') format('woff2'); font-weight: 400; }
+  @font-face { font-family: 'Plex Mono'; src: url('../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500-normal.woff2') format('woff2'); font-weight: 500; }
+  :root { --papel: #f2efe9; --texto: #1d1a16; --texto-2: #5b544b; --acento: #c4433b; --fio: #d9d3c8; --voz: #d9534f; --backing: #c98a1b; --instr: #2f8f86; }
+  @page { size: A4; margin: 16mm 16mm 18mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; color: var(--texto); font: 10.5pt/1.5 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  h1, h2, h3 { font-family: 'Archivo', sans-serif; font-stretch: 88%; letter-spacing: -0.01em; margin: 0; line-height: 1.1; }
+  .mono { font-family: 'Plex Mono', ui-monospace, monospace; }
+  .rotulo { font-family: 'Plex Mono', monospace; font-size: 8pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--texto-2); }
+
+  /* capa */
+  .capa { height: 255mm; display: flex; flex-direction: column; page-break-after: always; }
+  .capa .topo { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 34px; height: 34px; border-radius: 7px; background: #1d1a16; display: grid; place-items: center; }
+  .logo svg { width: 22px; height: 22px; }
+  .capa .marca { font-family: 'Archivo', sans-serif; font-weight: 700; font-stretch: 110%; font-size: 15pt; }
+  .capa h1 { font-size: 40pt; font-weight: 800; margin: 26mm 0 6mm; }
+  .capa h1 span { color: var(--acento); }
+  .capa .lead { font-size: 13pt; color: var(--texto-2); max-width: 140mm; }
+  .link { margin: 9mm 0; padding: 4mm 5mm; border: 1.5px solid var(--texto); border-radius: 6px; display: inline-block; }
+  .link .mono { font-size: 13pt; font-weight: 500; color: var(--acento); }
+  .faz { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; margin-top: 4mm; }
+  .faz div { border-top: 3px solid var(--fio); padding-top: 3mm; }
+  .faz div:nth-child(1) { border-color: var(--voz); }
+  .faz div:nth-child(2) { border-color: var(--backing); }
+  .faz div:nth-child(3) { border-color: var(--instr); }
+  .faz b { font-family: 'Archivo', sans-serif; font-size: 12pt; display: block; margin-bottom: 1mm; }
+  .antes { margin-top: auto; background: var(--papel); border-radius: 6px; padding: 5mm 6mm; }
+  .antes h3 { font-size: 12pt; margin-bottom: 2mm; }
+  .antes ul { margin: 0; padding-left: 5mm; }
+  .antes li { margin: 1mm 0; }
+
+  /* passos */
+  .passo { page-break-inside: avoid; margin-bottom: 7mm; }
+  .passo-cab { display: flex; align-items: baseline; gap: 4mm; border-bottom: 1px solid var(--fio); padding-bottom: 2mm; margin-bottom: 3.5mm; }
+  .num { font-family: 'Plex Mono', monospace; font-weight: 500; font-size: 10pt; color: #fff; background: var(--acento); border-radius: 4px; padding: 0.5mm 2mm; }
+  .passo h2 { font-size: 17pt; font-weight: 750; }
+  .passo p { margin: 0 0 2.5mm; }
+  ol, ul { margin: 0 0 2.5mm; padding-left: 5.5mm; }
+  li { margin: 0.8mm 0; }
+  figure { margin: 3mm 0 0; border: 1px solid var(--fio); border-radius: 6px; overflow: hidden; background: #fff; }
+  figure img { display: block; width: 100%; }
+  figure.recorte { aspect-ratio: 2560 / 980; }
+  figure.recorte img { object-fit: cover; object-position: top; height: 100%; }
+  figure.estreito { width: 62%; }
+  figure.meia { width: 48%; }
+  .lado { display: flex; gap: 5mm; align-items: flex-start; }
+  .lado > div { flex: 1; }
+  figcaption { font-size: 8.5pt; color: var(--texto-2); padding: 1.5mm 3mm; border-top: 1px solid var(--fio); background: var(--papel); }
+  .dica { background: var(--papel); border-left: 3px solid var(--acento); padding: 2.5mm 4mm; margin: 3mm 0; border-radius: 0 4px 4px 0; }
+  .dica b { font-family: 'Archivo', sans-serif; }
+  kbd { font-family: 'Plex Mono', monospace; font-size: 8.5pt; border: 1px solid var(--fio); border-bottom-width: 2px; border-radius: 3px; padding: 0 1.5mm; background: #fff; }
+  .quebra { page-break-before: always; }
+  table { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+  th, td { text-align: left; vertical-align: top; padding: 2.2mm 3mm; border-bottom: 1px solid var(--fio); }
+  th { font-family: 'Archivo', sans-serif; font-size: 10pt; background: var(--papel); }
+  .fim { margin-top: 8mm; padding: 5mm 6mm; border: 1.5px solid var(--texto); border-radius: 6px; }
+  .fim h3 { font-size: 13pt; margin-bottom: 2mm; }
+</style>
+</head>
+<body>
+
+<section class="capa">
+  <div class="topo">
+    <span class="logo"><svg viewBox="0 0 24 24"><rect x="4" y="12" width="4" height="8" rx="1" fill="#e0574f"/><rect x="10" y="8" width="4" height="12" rx="1" fill="#d89a2b"/><rect x="16" y="4" width="4" height="16" rx="1" fill="#39a397"/></svg></span>
+    <span class="marca">Ensaio Vocal</span>
+  </div>
+  <p class="rotulo" style="margin-top: 24mm;">Guia rápido</p>
+  <h1 style="margin-top: 3mm;">Separe a voz.<br /><span>Treine cantando.</span></h1>
+  <p class="lead">Uma ferramenta gratuita, sem limite de uso, para separar a voz do instrumental de qualquer música e ensaiar em cima dela. Tudo roda no seu computador: a música não é enviada para lugar nenhum.</p>
+  <div class="link"><span class="rotulo">Abra no navegador</span><br /><span class="mono">matheus-sys.github.io/separador-vocal</span></div>
+  <div class="faz">
+    <div><b>Separar</b>Voz principal, backing vocal e instrumental, em poucos minutos.</div>
+    <div><b>Ensaiar</b>Volume de cada parte, tom, velocidade e repetição de um trecho.</div>
+    <div><b>Compartilhar</b>Salve o exercício pronto e mande para os alunos.</div>
+  </div>
+  <div class="antes">
+    <h3>Antes de começar</h3>
+    <ul>
+      <li>Use um <b>computador</b> (Mac ou Windows), de preferência com o <b>Google Chrome</b> atualizado.</li>
+      <li>Na <b>primeira vez</b> o app baixa o "cérebro" que separa as vozes (cerca de 240 MB). Use Wi-Fi. Depois ele fica guardado.</li>
+      <li>Uma música de 4 minutos leva de <b>2 a 3 minutos</b> para separar.</li>
+      <li>No celular dá para abrir exercícios prontos e treinar, mas separar música é pesado demais para ele.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="passo">
+  <div class="passo-cab"><span class="num">1</span><h2>Separar uma música</h2></div>
+  <ol>
+    <li>Abra o link no Chrome.</li>
+    <li><b>Arraste</b> o arquivo da música (MP3, WAV, M4A…) para a área grande, ou clique em <b>Escolher arquivo</b>.</li>
+    <li>Deixe marcado <b>Alta qualidade</b>. Ele separa voz principal, backing vocal (coro) e instrumental.</li>
+  </ol>
+  <figure class="recorte"><img src="img/01-inicio.png" alt="Tela inicial" /><figcaption>Tela inicial: arraste a música e escolha o modo.</figcaption></figure>
+  <p style="margin-top: 4mm;">Enquanto separa, a barra mostra quanto falta. Pode usar outras abas, mas <b>não feche esta</b>.</p>
+  <figure class="estreito"><img src="img/02-progresso.png" alt="Separando" /></figure>
+  <div class="dica"><b>Se aparecer "Alta qualidade: indisponível aqui"</b>, o navegador não liberou a placa de vídeo. Abra no Chrome atualizado, ou use o modo <b>Leve</b> (separa só voz e instrumental e demora um pouco mais).</div>
+</section>
+
+<section class="passo quebra">
+  <div class="passo-cab"><span class="num">2</span><h2>Tocar e repetir um trecho</h2></div>
+  <figure><img src="img/04-onda-trecho.png" alt="Forma de onda e controles" /></figure>
+  <ul style="margin-top: 3mm;">
+    <li><b>Clique na onda</b> para pular para aquele ponto da música.</li>
+    <li><b>Arraste na onda</b> para marcar um trecho (aparecem as marcas <b>A</b> e <b>B</b>). Com <b>Repetir trecho</b> ligado, ele toca aquele pedaço em loop. Ótimo para a passagem difícil.</li>
+    <li>Também dá para marcar tocando: aperte <b>A</b> no começo do trecho e <b>B</b> no fim.</li>
+    <li><b>Contagem 1-2-3-4</b>: toca quatro cliques antes de começar, para dar tempo de respirar.</li>
+  </ul>
+  <p>Atalhos de teclado: <kbd>espaço</kbd> toca e pausa · <kbd>←</kbd> <kbd>→</kbd> voltam e avançam 5 s · <kbd>A</kbd> <kbd>B</kbd> marcam o trecho · <kbd>L</kbd> liga e desliga a repetição.</p>
+</section>
+
+<section class="passo">
+  <div class="passo-cab"><span class="num">3</span><h2>Volume de cada parte</h2></div>
+  <div class="lado">
+    <figure class="meia"><img src="img/05-faixas.png" alt="Faixas" /></figure>
+    <div>
+      <p>Cada parte tem o seu <b>fader</b> (o controle que sobe e desce), de 0 a 150%.</p>
+      <ul>
+        <li><b>MUDO</b>: silencia aquela parte.</li>
+        <li><b>SOLO</b>: ouve só aquela parte.</li>
+      </ul>
+      <p>Atalhos prontos, embaixo das faixas:</p>
+      <ul>
+        <li><b>Só instrumental</b>: karaokê, para o aluno cantar sozinho.</li>
+        <li><b>Voz baixinha de guia</b>: a voz fica em 20%, só para orientar.</li>
+        <li><b>Só a voz</b>: para estudar a interpretação do cantor.</li>
+        <li><b>Original</b>: volta tudo a 100%.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="passo">
+  <div class="passo-cab"><span class="num">4</span><h2>Tom e velocidade</h2></div>
+  <div class="lado">
+    <figure class="meia" style="width: 42%;"><img src="img/06-tom-velocidade.png" alt="Tom e velocidade" /></figure>
+    <div>
+      <p><b>Tom</b>: use <b>−</b> e <b>+</b> para descer ou subir meio tom de cada vez (até 12 para cada lado). A velocidade não muda.</p>
+      <p><b>Velocidade</b>: de 50% a 125%, sem mudar o tom. Os botões <b>70%</b> e <b>85%</b> são bons para estudar uma passagem devagar e depois ir subindo.</p>
+      <p><b>Voltar tom e velocidade ao original</b> desfaz tudo de uma vez.</p>
+      <div class="dica">Os ajustes ficam <b>salvos sozinhos</b> em cada música. Quando você reabrir, ela volta do jeito que estava.</div>
+    </div>
+  </div>
+</section>
+
+<section class="passo">
+  <div class="passo-cab"><span class="num">5</span><h2>Baixar o áudio</h2></div>
+  <div class="lado">
+    <figure class="meia" style="width: 27%;"><img src="img/07-baixar.png" alt="Baixar" /></figure>
+    <div>
+      <ul>
+        <li><b>Mixagem atual</b> (MP3 ou WAV): baixa do jeito que está tocando, com os volumes, o tom e a velocidade escolhidos. Serve, por exemplo, para mandar "o instrumental 2 tons abaixo" no WhatsApp.</li>
+        <li><b>Faixas separadas</b>: a voz principal, o backing ou o instrumental, cada um num MP3.</li>
+        <li><b>Projeto (.zip)</b>: veja o próximo passo.</li>
+      </ul>
+      <p>Enquanto o arquivo é gerado aparece o botão <b>Cancelar</b>, caso tenha clicado errado.</p>
+    </div>
+  </div>
+</section>
+
+<section class="passo">
+  <div class="passo-cab"><span class="num">6</span><h2>Preparar um exercício para os alunos</h2></div>
+  <p>O <b>projeto (.zip)</b> guarda a música já separada <b>com os seus ajustes</b>: volumes, tom, velocidade e o trecho marcado. O aluno abre e já cai no exercício pronto, sem esperar separar de novo.</p>
+  <ol>
+    <li>Ajuste a música do jeito que quer que o aluno treine (por exemplo: refrão marcado, −2 tons, 85%).</li>
+    <li>Em <b>Baixar</b>, clique em <b>Projeto para reabrir depois (.zip)</b>.</li>
+    <li>Dê um nome fácil de achar, como <span class="mono">pacote_aluno_matheus</span>, e clique em <b>Baixar</b>.</li>
+    <li>Mande o .zip para o aluno (WhatsApp, e-mail, Drive…).</li>
+  </ol>
+  <div class="lado">
+    <figure class="meia" style="width: 44%;"><img src="img/08-nome-arquivo.png" alt="Nome do arquivo" /><figcaption>Escolha o nome antes de baixar.</figcaption></figure>
+    <div>
+      <p><b>Como o aluno abre:</b> entra no mesmo link e <b>arrasta o .zip</b> para a área "Arraste uma música aqui". Funciona também no celular, para treinar.</p>
+      <p><b>Vários de uma vez:</b> em <b>Minhas músicas</b> (botão no alto da tela), marque as músicas e clique em <b>Baixar</b>. Sai um arquivo só, com todas dentro.</p>
+    </div>
+  </div>
+</section>
+
+<section class="passo">
+  <div class="passo-cab"><span class="num">7</span><h2>Minhas músicas</h2></div>
+  <div class="lado">
+    <figure class="meia" style="width: 26%;"><img src="img/09-minhas-musicas.png" alt="Minhas músicas" /></figure>
+    <div>
+      <p>Toda música separada fica guardada <b>neste navegador</b> e reabre na hora.</p>
+      <ul>
+        <li>Clique no nome para abrir.</li>
+        <li>A <b>seta</b> baixa o projeto (.zip) e a <b>lixeira</b> apaga.</li>
+        <li>Marque várias para <b>baixar</b> ou <b>apagar</b> de uma vez.</li>
+        <li><b>Importar projeto (.zip)</b>: abre um projeto que alguém mandou.</li>
+        <li><b>Limpar tudo</b>: apaga todas. Não dá para desfazer, então baixe antes o que quiser guardar.</li>
+      </ul>
+      <div class="dica">Se o navegador for limpo (cache e dados apagados), as músicas guardadas somem. Os projetos .zip que você baixou continuam valendo.</div>
+    </div>
+  </div>
+</section>
+
+<section class="passo quebra">
+  <div class="passo-cab"><span class="num">?</span><h2>Se algo não funcionar</h2></div>
+  <table>
+    <tr><th style="width: 42%;">O que aconteceu</th><th>O que fazer</th></tr>
+    <tr><td>"Alta qualidade" aparece como <i>indisponível aqui</i></td><td>Abra no <b>Google Chrome</b> atualizado. Se continuar, use o modo <b>Leve</b>.</td></tr>
+    <tr><td>Está demorando muito</td><td>Na primeira vez ele baixa 240 MB, então espere. No modo Leve, sem placa de vídeo, pode levar uns 10 minutos para uma música de 4 minutos.</td></tr>
+    <tr><td>A página fechou sozinha ou deu erro de memória</td><td>Feche outras abas e programas e tente de novo. No celular, separe no computador.</td></tr>
+    <tr><td>"Não deu para guardar na biblioteca"</td><td>Falta espaço no navegador. Apague músicas antigas em <b>Minhas músicas</b> ou baixe o projeto.</td></tr>
+    <tr><td>Não consegue abrir o arquivo da música</td><td>Use MP3, WAV ou M4A. Arquivos protegidos (de app de streaming) não abrem.</td></tr>
+    <tr><td>Janela anônima</td><td>Funciona, mas o app baixa o modelo toda vez e as músicas somem ao fechar.</td></tr>
+  </table>
+
+  <div class="fim">
+    <h3>Me ajude a melhorar</h3>
+    <p style="margin: 0;">Depois do primeiro teste, me conte: <b>funcionou no seu computador?</b> (Mac ou Windows, Safari ou Chrome) · <b>a voz ficou bem separada</b> no "Só instrumental"? · <b>apareceu algum erro?</b> Um print da tela ajuda muito.</p>
+  </div>
+</section>
+
+</body>
+</html>
