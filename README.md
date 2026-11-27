@@ -10,13 +10,13 @@ enviada para servidor nenhum e **não há limite de uso**.
 
 1. Abra o link no **Chrome** ou no **Edge** (Windows) ou no **Safari atualizado** ou no **Chrome** (Mac).
 2. Arraste uma música (MP3, WAV, M4A…) para a área indicada.
-3. Escolha o modo:
-   - **Alta qualidade**: separa **voz principal**, **backing vocal** e **instrumental**. Usa a placa de vídeo.
-     Na primeira vez baixa cerca de 240 MB, que ficam guardados no navegador.
-   - **Leve / compatível**: separa voz e instrumental. Funciona em qualquer computador, mas é mais lento
-     em computador sem placa de vídeo. Na primeira vez baixa 67 MB.
-4. Espere a separação. Uma música de 4 minutos leva **2 a 3 minutos** num notebook comum com placa de vídeo
-   integrada. Pode usar outras abas, mas **não feche a aba do Ensaio Vocal**.
+3. Escolher o arquivo **não** começa nada: aparece a *Música escolhida*. Escolha o modo (cada um mostra o tempo
+   estimado para aquela música) e clique em **Separar**:
+   - **Rápido**: voz e instrumental, em cerca de **1 minuto** para uma música de 4 minutos. Funciona em qualquer
+     computador; é o modo para usar **na aula**. Na primeira vez baixa 30 MB.
+   - **Melhor qualidade**: separa também o **backing vocal**, mais limpo, em cerca de **3 minutos**. Precisa de
+     placa de vídeo. Na primeira vez baixa cerca de 240 MB.
+4. Espere a separação. Pode usar outras abas, mas **não feche a aba do Ensaio Vocal**.
 5. No estúdio:
    - **Faixas**: volume de 0 a 150%, **Mudo** e **Solo** para cada parte. Atalhos prontos: *Só instrumental*
      (karaokê), *Voz baixinha de guia*, *Só a voz*, *Original*.
@@ -41,8 +41,8 @@ Atalhos de teclado: `espaço` toca e pausa · `←` `→` voltam e avançam 5 s 
 
 | Sintoma | O que fazer |
 |---|---|
-| "Alta qualidade" aparece como *indisponível aqui* | O navegador não liberou a placa de vídeo (WebGPU). Atualize o navegador ou use o modo Leve. |
-| Separação muito lenta | Normal no modo Leve sem placa de vídeo (uns 10 min por música de 4 min). Prefira o Alta qualidade. |
+| "Melhor qualidade" aparece como *indisponível aqui* | O navegador não liberou a placa de vídeo (WebGPU). Atualize o navegador ou use o modo Rápido. |
+| Separação muito lenta | Use o modo Rápido. Sem placa de vídeo ele leva mais ou menos o tempo da própria música. |
 | "Não deu para guardar na biblioteca" | O navegador está sem espaço. Apague músicas antigas em *Minhas músicas* ou baixe as faixas. |
 | Janela anônima | Funciona, mas o modelo é baixado toda vez e a biblioteca some ao fechar. |
 

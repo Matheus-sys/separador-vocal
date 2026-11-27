@@ -68,6 +68,63 @@ async function carregarSessao(modelo, base) {
   return sessaoAtual;
 }
 
+// Worker de DSP: um só, reaproveitado entre músicas. Se o navegador não deixar criar worker dentro
+// de worker, faz o mesmo cálculo aqui mesmo (mais lento, mas funciona).
+let dspWorker = null;
+let dspSeq = 0;
+const dspPendentes = new Map();
+function obterDsp() {
+  if (dspWorker === null) {
+    try {
+      dspWorker = new Worker(new URL('./dsp-worker.js', import.meta.url), { type: 'module' });
+      dspWorker.onmessage = (ev) => {
+        const r = dspPendentes.get(ev.data.id);
+        dspPendentes.delete(ev.data.id);
+        if (!r) return;
+        if (ev.data.erro) r.reject(new Error(ev.data.erro));
+        else r.resolve(ev.data);
+      };
+      dspWorker.onerror = (e) => {
+        for (const r of dspPendentes.values()) r.reject(new Error(e.message || 'falha no processamento de sinal'));
+        dspPendentes.clear();
+      };
+    } catch {
+      dspWorker = false;
+    }
+  }
+  if (dspWorker) {
+    return {
+      pedir: (msg, transf) =>
+        new Promise((resolve, reject) => {
+          const id = ++dspSeq;
+          dspPendentes.set(id, { resolve, reject });
+          dspWorker.postMessage({ ...msg, id }, transf);
+        }),
+    };
+  }
+  const specs = new Map();
+  return {
+    pedir: async (m) => {
+      const md = m.modelo;
+      if (m.op === 'preparar') {
+        if (md.tipo === 'roformer') {
+          const r = roformerEntrada(m.pedaco, md.nFft, md.hop);
+          specs.set(m.k, r.specs);
+          return { dados: r.dados, dims: [1, r.bins * 2, r.frames, 2] };
+        }
+        const r = mdxEntrada(m.pedaco, md.nFft, md.hop, md.dimF);
+        return { dados: r.dados, dims: [1, 4, md.dimF, r.frames], frames: r.frames };
+      }
+      if (md.tipo === 'roformer') {
+        const sp = specs.get(m.k);
+        specs.delete(m.k);
+        return roformerSaida(sp, m.saida, md.nFft, md.hop, m.tam);
+      }
+      return { voz: mdxSaida(m.saida, md.nFft, md.hop, md.dimF, m.frames, m.tam, md.compensar) };
+    },
+  };
+}
+
 async function separar({ modeloId, canais, base, normalizar = true }) {
   // produção: motor solto em /ort/ (ver vite.config.js). No dev o Vite não deixa importar de public/.
   if (!import.meta.env.DEV) ort.env.wasm.wasmPaths = new URL('ort/', base).href;
@@ -79,60 +136,54 @@ async function separar({ modeloId, canais, base, normalizar = true }) {
   const { sessao, ep } = await carregarSessao(modelo, base);
   const total = canais[0].length;
   const tam = tamanhoPedaco(modelo);
-  const sob = Math.round(tam / 4);
+  const sob = modelo.sobreposicao ?? Math.round(tam / 4);
   const inicios = planejarPedacos(total, tam, sob);
   const accVoz = criarAcumulador(total, 2);
   const accBack = modelo.tipo === 'roformer' ? criarAcumulador(total, 2) : null;
   enviar({ tipo: 'progresso', etapa: 'separando', feito: 0, total: inicios.length, ep });
 
-  // Preparação (STFT) e finalização (iSTFT) rodam no processador enquanto a placa de vídeo
-  // processa o pedaço atual: o pedaço k+1 é preparado e o k-1 finalizado durante o run(k).
+  // Preparação (STFT) e finalização (iSTFT) rodam num SEGUNDO worker (dsp-worker.js), em paralelo
+  // com a placa de vídeo: enquanto o modelo roda o pedaço k, ele prepara o k+1 e finaliza o k-1.
+  // (Na mesma thread os dois disputavam o JavaScript e quase não se sobrepunham.)
+  const dsp = obterDsp();
+  const infoModelo = { tipo: modelo.tipo, nFft: modelo.nFft, hop: modelo.hop, dimF: modelo.dimF, compensar: modelo.compensar };
   const preparar = (k) => {
-    const ini = inicios[k];
-    const pedaco = canais.map((c) => recortar(c, ini, tam));
+    const pedaco = canais.map((c) => recortar(c, inicios[k], tam));
     if (escala !== 1) for (const p of pedaco) for (let i = 0; i < p.length; i++) p[i] *= escala;
-    const peso = pesoPedaco(tam, sob, k === 0, k === inicios.length - 1);
-    if (modelo.tipo === 'roformer') {
-      const { dados, specs, bins, frames } = roformerEntrada(pedaco, modelo.nFft, modelo.hop);
-      return { ini, peso, specs, entrada: new ort.Tensor('float32', dados, [1, bins * 2, frames, 2]) };
-    }
-    const { dados, frames } = mdxEntrada(pedaco, modelo.nFft, modelo.hop, modelo.dimF);
-    return { ini, peso, frames, entrada: new ort.Tensor('float32', dados, [1, 4, modelo.dimF, frames]) };
+    return dsp.pedir({ op: 'preparar', k, modelo: infoModelo, pedaco }, pedaco.map((a) => a.buffer));
   };
-  const finalizar = (p, saida) => {
-    if (modelo.tipo === 'roformer') {
-      const { voz, backing } = roformerSaida(p.specs, saida, modelo.nFft, modelo.hop, tam);
-      accVoz.somar(p.ini, voz, p.peso);
-      accBack.somar(p.ini, backing, p.peso);
-    } else {
-      accVoz.somar(p.ini, mdxSaida(saida, modelo.nFft, modelo.hop, modelo.dimF, p.frames, tam, modelo.compensar), p.peso);
-    }
-  };
-  const rodar = async (p) => {
-    const r = await sessao.run({ [sessao.inputNames[0]]: p.entrada });
+  const rodar = async (dados, dims) => {
+    const r = await sessao.run({ [sessao.inputNames[0]]: new ort.Tensor('float32', dados, dims) });
     const t = r[sessao.outputNames[0]];
-    const dados = await t.getData();
+    let saida = await t.getData();
+    // só dá para transferir um buffer inteiro: se a saída for um pedaço de buffer maior, copia
+    if (saida.byteOffset !== 0 || saida.byteLength !== saida.buffer.byteLength) saida = saida.slice();
     t.dispose?.();
-    return dados;
+    return saida;
+  };
+  const somar = (k, res) => {
+    const peso = pesoPedaco(tam, sob, k === 0, k === inicios.length - 1, modelo.borda || 0);
+    accVoz.somar(inicios[k], res.voz, peso);
+    if (accBack) accBack.somar(inicios[k], res.backing, peso);
   };
 
+  const finalizacoes = [];
+  const tempos = { espera: 0, gpu: 0 }; // diagnóstico: espera pelo DSP × tempo do modelo
   let proximo = preparar(0);
-  let pendente = null; // [pedaço, saída] esperando finalização
   for (let k = 0; k < inicios.length; k++) {
-    const atual = proximo;
-    const execucao = rodar(atual);
-    // deixa o ORT despachar o trabalho para a GPU antes de ocupar o processador
-    await new Promise((r) => setTimeout(r, 0));
-    if (pendente) {
-      finalizar(...pendente);
-      pendente = null;
-    }
-    proximo = k + 1 < inicios.length ? preparar(k + 1) : null;
-    pendente = [atual, await execucao];
-    atual.entrada = null;
-    enviar({ tipo: 'progresso', etapa: 'separando', feito: k + 1, total: inicios.length, ep });
+    const t0 = performance.now();
+    const { dados, dims, frames } = await proximo;
+    const t1 = performance.now();
+    if (k + 1 < inicios.length) proximo = preparar(k + 1);
+    const saida = await rodar(dados, dims);
+    tempos.espera += t1 - t0;
+    tempos.gpu += performance.now() - t1;
+    finalizacoes.push(
+      dsp.pedir({ op: 'finalizar', k, modelo: infoModelo, saida, frames, tam }, [saida.buffer]).then((res) => somar(k, res)),
+    );
+    enviar({ tipo: 'progresso', etapa: 'separando', feito: k + 1, total: inicios.length, ep, tempos });
   }
-  if (pendente) finalizar(...pendente);
+  await Promise.all(finalizacoes);
 
   const vozTotal = accVoz.finalizar();
   if (escala !== 1) for (const v of vozTotal) for (let i = 0; i < v.length; i++) v[i] /= escala;

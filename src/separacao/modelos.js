@@ -42,6 +42,10 @@ export const MODELOS = {
     frames: 256,
     dimF: 3072,
     compensar: 1.009,
+    // as bordas do MDX são ruins só no primeiro/último nFft/2 (o UVR descarta 3840 amostras de cada lado);
+    // sobreposição pequena = menos pedaços (93 → ~74 numa música de 6:51) sem perder qualidade
+    sobreposicao: 16384,
+    borda: 3840, // nFft / 2
     arquivos: [
       {
         url: 'modelos/Kim_Vocal_2.onnx', // servido junto com o site
@@ -51,6 +55,34 @@ export const MODELOS = {
       },
     ],
     licenca: 'UVR MDX-Net Kim Vocal 2 (Ultimate Vocal Remover)',
+    // Não é mais oferecido na tela (27/11/2026): com placa de vídeo o "qualidade" é mais rápido e melhor;
+    // sem placa, o "rapido" é ~3x mais rápido com SDR parecido. Fica no catálogo para abrir músicas e
+    // projetos antigos feitos com ele.
+    oculto: true,
+  },
+  rapido: {
+    id: 'rapido',
+    nome: 'Rápido',
+    descricao: 'Voz e instrumental. O mais rápido; funciona em qualquer computador.',
+    tipo: 'mdx',
+    precisaWebGPU: false,
+    faixas: ['voz', 'instrumental'],
+    nFft: 6144,
+    hop: 1024,
+    frames: 256,
+    dimF: 2048,
+    compensar: 1.03,
+    sobreposicao: 16384,
+    borda: 3072, // nFft / 2
+    arquivos: [
+      {
+        url: 'modelos/UVR_MDXNET_1_9703.onnx', // servido junto com o site
+        nome: 'UVR_MDXNET_1_9703.onnx',
+        bytes: 29704436,
+        sha256: '229ad3bb96a037e89d8ed86732d6d3675856e6a07c3e3f02896eac01ec7ee4be',
+      },
+    ],
+    licenca: 'UVR MDX-Net 1 (9703) (Ultimate Vocal Remover)',
   },
 };
 

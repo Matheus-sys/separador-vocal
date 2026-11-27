@@ -22,6 +22,23 @@ Na primeira vez soma o download do modelo: 242 MB do Hugging Face.
 
 Exportação com tom −2 e 85%, MP3 192 kbps, 6 min 51 s → 8 min 4 s: 45 s. A duração saiu exata (483,8 s = 411,2 / 0,85).
 
+## Modo Rápido (27/11/2026)
+
+Modelo **UVR MDX-Net 1 (9703)**: 29 MB, 2048 bandas, nFft 6144. SDR da voz no MUSDB: 9,99 / 12,18 / 12,64 / 10,08 dB
+(Kim: 10,82 / 12,64 / 13,50 / 11,55, ou seja, 0,3 a 1,3 dB abaixo). No navegador bate com a referência em Python.
+
+| Medida | Valor |
+|---|---|
+| Modelo sozinho, 1 pedaço de 5,9 s, WebGPU (Iris Xe) | **1,0 s** com a máquina fria, 2,1 s com ela quente (o notebook reduz a velocidade depois de horas de carga) |
+| Música de 6:51 inteira | 156 a 177 s com a máquina **quente**; estimado em 75 a 90 s com ela fria. Melhor qualidade, nas mesmas condições: 292 s |
+| WebKit sem placa de vídeo, trecho de 7 s | 33 s (o antigo Leve/Kim: 70 s) |
+
+Otimizações:
+- A STFT dos dois canais passou a ser feita numa única FFT complexa (L real, R imaginária).
+- O processamento de sinal foi para um **segundo worker** (`dsp-worker.js`) e roda em paralelo com o modelo. A espera por ele caiu para 0,28 s no total.
+- Sobreposição do MDX reduzida de 25% para 16.384 amostras, com as pontas (nFft/2) de peso zero na emenda, como o UVR faz: 93 → 74 pedaços.
+- Mandar 2 pedaços de uma vez para a placa de vídeo **não** ajudou (2,4 s por pedaço).
+
 ## Qualidade (SDR, MUSDB18 amostras de 7 s, 4 faixas de teste)
 
 SDR da voz (dB), voz completa (principal + backing) contra a referência:

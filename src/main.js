@@ -11,9 +11,9 @@ import { exportarProjeto, exportarPacote, importarProjetos, pareceZip, nomeSegur
 const $ = (id) => document.getElementById(id);
 const player = new Player();
 const ROTULOS = {
-  voz: { qualidade: 'Voz principal', leve: 'Voz' },
+  voz: { qualidade: 'Voz principal', leve: 'Voz', rapido: 'Voz' },
   backing: { qualidade: 'Backing vocal' },
-  instrumental: { qualidade: 'Instrumental', leve: 'Instrumental' },
+  instrumental: { qualidade: 'Instrumental', leve: 'Instrumental', rapido: 'Instrumental' },
 };
 const CORES = { voz: '--voz', backing: '--backing', instrumental: '--instrumental' };
 const ORDEM = ['voz', 'backing', 'instrumental'];
@@ -65,29 +65,30 @@ async function detectar() {
     estado.webgpu = false;
   }
   const radioQ = document.querySelector('input[name=modo][value=qualidade]');
-  const radioL = document.querySelector('input[name=modo][value=leve]');
+  const radioR = document.querySelector('input[name=modo][value=rapido]');
   if (estado.celular) {
     radioQ.disabled = true;
-    radioL.checked = true;
+    radioR.checked = true;
     $('selo-qualidade').textContent = 'só no computador';
     const aviso = $('aviso-gpu');
     aviso.hidden = false;
     aviso.textContent =
-      'Você está no celular. Separar música é pesado demais para o celular e o navegador pode fechar a página. ' +
-      'O ideal é separar no computador (Windows ou Mac). Se quiser tentar aqui, use o modo Leve com uma música curta.';
-    $('modo-leve-desc').textContent = 'Voz e instrumental. No celular é experimental: pode demorar ou fechar a página.';
+      'Você está no celular. Separar música é pesado para o celular e o navegador pode fechar a página. ' +
+      'O ideal é separar no computador (Windows ou Mac). Se quiser tentar aqui, use o modo Rápido com uma música curta.';
+    $('modo-rapido-desc').textContent = 'Voz e instrumental. No celular é experimental: pode demorar ou fechar a página.';
     $('soltar').querySelector('strong').textContent = 'Toque para escolher uma música';
     $('soltar').querySelector('span').textContent = 'MP3, WAV, M4A… ou um projeto do Ensaio Vocal (.zip)';
   } else if (!estado.webgpu) {
     radioQ.disabled = true;
-    radioL.checked = true;
+    radioR.checked = true;
     $('selo-qualidade').textContent = 'indisponível aqui';
     const aviso = $('aviso-gpu');
     aviso.hidden = false;
     aviso.textContent =
-      'Este navegador não liberou a placa de vídeo (WebGPU), então o modo Alta qualidade fica desligado. ' +
-      'No Mac, use o Safari atualizado ou o Chrome. No Windows, use o Chrome ou o Edge atualizados.';
+      'Este navegador não liberou a placa de vídeo (WebGPU), então o modo Melhor qualidade fica desligado. ' +
+      'O modo Rápido funciona normalmente. No Mac, use o Safari atualizado ou o Chrome; no Windows, o Chrome ou o Edge.';
   }
+  atualizarEstimativas();
   for (const m of Object.values(MODELOS)) {
     if (estado.celular) break;
     if (await modeloEmCache(m.arquivos, location.href)) {
@@ -117,49 +118,112 @@ function progresso(titulo, frac, detalhe) {
   $('prog-detalhe').textContent = detalhe || '';
 }
 
-async function processarArquivo(arquivo) {
+// Tempo aproximado de separação, em fração da duração da música (medido num notebook comum,
+// Intel Iris Xe: Rápido ~0,2–0,4×, Melhor qualidade ~0,6×; sem placa de vídeo o Rápido fica ~1×).
+function segundosEstimados(modeloId, duracao) {
+  if (modeloId === 'rapido') return duracao * (estado.webgpu ? 0.3 : 1);
+  return duracao * 0.65;
+}
+
+function textoTempo(seg) {
+  if (seg < 60) return 'menos de 1 min';
+  const min = Math.round(seg / 60);
+  return `≈ ${min} min`;
+}
+
+function atualizarEstimativas() {
+  const dur = estado.pendente?.duracao;
+  for (const id of ['rapido', 'qualidade']) {
+    const el = $('tempo-' + id);
+    if (!el) continue;
+    const radio = document.querySelector(`input[name=modo][value=${id}]`);
+    if (radio?.disabled) {
+      el.textContent = '';
+      continue;
+    }
+    el.textContent = dur
+      ? `${textoTempo(segundosEstimados(id, dur))} para esta música`
+      : `${textoTempo(segundosEstimados(id, 240))} para uma música de 4 min`;
+  }
+}
+
+function limparEscolha() {
+  estado.pendente = null;
+  $('escolhida').hidden = true;
+  $('btn-separar').disabled = true;
+  $('btn-separar').textContent = 'Escolha uma música primeiro';
+  atualizarEstimativas();
+}
+
+/** 1º passo: só lê a música e mostra; a separação começa no botão Separar. */
+async function selecionarArquivo(arquivo) {
   if (estado.separando) return;
-  // um .zip é projeto do Ensaio Vocal: importa em vez de separar
+  // um .zip é projeto do Ensaio Vocal: importa direto (não tem modo para escolher)
   const cabecalho = new Uint8Array(await arquivo.slice(0, 4).arrayBuffer());
   if (pareceZip(cabecalho) || /\.zip$/i.test(arquivo.name)) return importarArquivo(arquivo);
-  const modeloId = modoEscolhido();
-  const modelo = MODELOS[modeloId];
-  mostrarEtapa('progresso');
-  $('prog-nome').textContent = arquivo.name;
-  progresso('Lendo a música…', null);
-  let buf;
+  mostrarEtapa('arquivo');
+  if (estado.celular && arquivo.size > 12 * 1024 * 1024) {
+    toast('Essa música é grande demais para separar no celular. Use o computador ou uma música mais curta.', true, 9000);
+    return;
+  }
+  $('escolhida').hidden = false;
+  $('escolhida-nome').textContent = arquivo.name;
+  $('escolhida-info').textContent = 'Lendo a música…';
+  $('btn-separar').disabled = true;
+  $('btn-separar').textContent = 'Lendo a música…';
+  let buf, canais;
   try {
     buf = await arquivo.arrayBuffer();
-  } catch {
-    toast('Não consegui ler o arquivo.', true);
-    mostrarEtapa('arquivo');
+    canais = await decodificar(buf);
+  } catch (e) {
+    toast(e?.message || 'Não consegui ler o arquivo.', true);
+    limparEscolha();
     return;
   }
-  if (estado.celular && buf.byteLength > 12 * 1024 * 1024) {
-    toast('Essa música é grande demais para separar no celular. Use o computador ou uma música mais curta.', true, 9000);
-    mostrarEtapa('arquivo');
-    return;
-  }
+  const duracao = canais[0].length / 44100;
+  estado.pendente = { arquivo, buf, canais, duracao };
+  $('escolhida-info').textContent = `${formatarTempo(duracao)} · ${formatarBytes(arquivo.size)}`;
+  $('btn-separar').disabled = false;
+  $('btn-separar').textContent = 'Separar';
+  atualizarEstimativas();
+  $('btn-separar').focus();
+}
+
+/** 2º passo: separa a música escolhida com o modo marcado. */
+async function iniciarSeparacao() {
+  if (estado.separando || !estado.pendente) return;
+  const pend = estado.pendente;
+  const arquivo = pend.arquivo;
+  const buf = pend.buf;
+  const modeloId = modoEscolhido();
+  mostrarEtapa('progresso');
+  $('prog-nome').textContent = arquivo.name;
+  progresso('Preparando…', null);
   const id = await bib.idDoArquivo(buf, modeloId);
   try {
     const salva = (await bib.existe(id)) ? await bib.abrirMusica(id) : null;
     if (salva) {
       abrirNoEstudio(salva.faixas, { id, nome: salva.nome, modeloId, data: salva.data }, salva.sr, salva.ajustes);
-      toast('Essa música já estava separada. Abri da biblioteca.');
+      toast('Essa música já estava separada neste modo. Abri da biblioteca.');
+      limparEscolha();
       return;
     }
   } catch {
     /* biblioteca indisponível: segue */
   }
 
-  let canais;
-  try {
-    canais = await decodificar(buf);
-  } catch (e) {
-    toast(e.message, true);
-    mostrarEtapa('arquivo');
-    return;
+  // os canais vão para o worker (transferidos); se a separação for cancelada, relê do arquivo
+  let canais = pend.canais;
+  if (!canais) {
+    try {
+      canais = await decodificar(buf);
+    } catch (e) {
+      toast(e.message, true);
+      mostrarEtapa('arquivo');
+      return;
+    }
   }
+  pend.canais = null;
   const duracao = canais[0].length / 44100;
   estado.separando = true;
   const w = estado.worker || novoWorker();
@@ -224,6 +288,7 @@ async function processarArquivo(arquivo) {
     mostrarEtapa('arquivo');
     return;
   }
+  limparEscolha();
   const meta = { id, nome: nomeBase(arquivo.name), modeloId, data: Date.now() };
   abrirNoEstudio(resultado.faixas, meta, 44100);
   try {
@@ -232,7 +297,7 @@ async function processarArquivo(arquivo) {
   } catch {
     toast('Separei, mas não deu para guardar na biblioteca (pouco espaço no navegador). Baixe as faixas se quiser manter.', true, 9000);
   }
-  void modelo;
+
 }
 
 // ---------- estúdio ----------
@@ -828,7 +893,7 @@ function ligar() {
   const input = $('arquivo');
   const soltar = $('soltar');
   input.addEventListener('change', () => {
-    if (input.files[0]) processarArquivo(input.files[0]);
+    if (input.files[0]) selecionarArquivo(input.files[0]);
     input.value = '';
   });
   soltar.addEventListener('keydown', (e) => {
@@ -847,7 +912,7 @@ function ligar() {
   soltar.addEventListener('drop', (e) => {
     e.preventDefault();
     const f = e.dataTransfer.files[0];
-    if (f) processarArquivo(f);
+    if (f) selecionarArquivo(f);
   });
   // soltar em qualquer lugar da página também funciona
   window.addEventListener('dragover', (e) => e.preventDefault());
@@ -856,11 +921,13 @@ function ligar() {
     const f = e.dataTransfer?.files[0];
     if (f && !estado.separando && (f.type.startsWith('audio') || /zip/.test(f.type) || /\.zip$/i.test(f.name))) {
       player.pausar();
-      processarArquivo(f);
+      selecionarArquivo(f);
     }
   });
 
   $('btn-cancelar').addEventListener('click', () => estado.cancelar?.());
+  $('btn-separar').addEventListener('click', iniciarSeparacao);
+  $('btn-trocar').addEventListener('click', () => $('arquivo').click());
   $('btn-nova').addEventListener('click', () => {
     player.pausar();
     atualizarPlayUI();

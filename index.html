@@ -87,25 +87,34 @@
         </label>
 
         <div class="inicio-lado">
+          <div class="escolhida" id="escolhida" hidden>
+            <p class="rotulo">Música escolhida</p>
+            <p class="escolhida-nome" id="escolhida-nome"></p>
+            <p class="escolhida-info" id="escolhida-info"></p>
+            <button type="button" class="link-acao" id="btn-trocar">Trocar música</button>
+          </div>
           <fieldset class="modos">
             <legend>Como separar</legend>
             <label class="modo">
-              <input type="radio" name="modo" value="qualidade" checked />
+              <input type="radio" name="modo" value="rapido" checked />
               <span class="modo-corpo">
-                <span class="modo-titulo">Alta qualidade <em class="selo" id="selo-qualidade">recomendado</em></span>
-                <span class="modo-faixas" aria-hidden="true"><i class="f-voz"></i><i class="f-backing"></i><i class="f-instrumental"></i></span>
-                <span class="modo-desc">Voz principal, backing vocal e instrumental. Usa a placa de vídeo. Baixa 240 MB na primeira vez.</span>
+                <span class="modo-titulo">Rápido <em class="selo selo-rapido" id="selo-rapido">mais rápido</em></span>
+                <span class="modo-faixas" aria-hidden="true"><i class="f-voz"></i><i class="f-instrumental"></i></span>
+                <span class="modo-tempo" id="tempo-rapido"></span>
+                <span class="modo-desc" id="modo-rapido-desc">Voz e instrumental. Ideal para usar na hora, na aula. Funciona em qualquer computador. Baixa 30 MB na primeira vez.</span>
               </span>
             </label>
             <label class="modo">
-              <input type="radio" name="modo" value="leve" />
+              <input type="radio" name="modo" value="qualidade" />
               <span class="modo-corpo">
-                <span class="modo-titulo">Leve / compatível</span>
-                <span class="modo-faixas" aria-hidden="true"><i class="f-voz"></i><i class="f-instrumental"></i></span>
-                <span class="modo-desc" id="modo-leve-desc">Voz e instrumental. Funciona em qualquer computador. Baixa 67 MB na primeira vez.</span>
+                <span class="modo-titulo">Melhor qualidade <em class="selo" id="selo-qualidade">mais limpo</em></span>
+                <span class="modo-faixas" aria-hidden="true"><i class="f-voz"></i><i class="f-backing"></i><i class="f-instrumental"></i></span>
+                <span class="modo-tempo" id="tempo-qualidade"></span>
+                <span class="modo-desc" id="modo-qualidade-desc">Voz principal, backing vocal e instrumental, mais bem separados. Mais lento; precisa de placa de vídeo. Baixa 240 MB na primeira vez.</span>
               </span>
             </label>
           </fieldset>
+          <button type="button" class="btn-primario btn-separar" id="btn-separar" disabled>Escolha uma música primeiro</button>
           <p class="aviso" id="aviso-gpu" hidden></p>
           <p class="privacidade">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z" /></svg>

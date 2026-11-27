@@ -8,12 +8,16 @@ export function planejarPedacos(total, tamanho, sobreposicao) {
   return Array.from({ length: n }, (_, k) => k * passo);
 }
 
-/** Peso de cada amostra dentro do pedaço: rampa nas bordas internas, 1 no meio. */
-export function pesoPedaco(tamanho, sobreposicao, primeiro, ultimo) {
+/**
+ * Peso de cada amostra dentro do pedaço: rampa nas bordas internas, 1 no meio.
+ * `borda` = amostras da ponta que o modelo erra e entram com peso zero (o vizinho cobre).
+ */
+export function pesoPedaco(tamanho, sobreposicao, primeiro, ultimo, borda = 0) {
   const w = new Float32Array(tamanho).fill(1);
   if (sobreposicao <= 0) return w;
+  const rampa = Math.max(1, sobreposicao - borda);
   for (let i = 0; i < sobreposicao && i < tamanho; i++) {
-    const r = (i + 0.5) / sobreposicao;
+    const r = i < borda ? 0 : Math.min(1, (i - borda + 0.5) / rampa);
     if (!primeiro) w[i] = Math.min(w[i], r);
     if (!ultimo) w[tamanho - 1 - i] = Math.min(w[tamanho - 1 - i], r);
   }

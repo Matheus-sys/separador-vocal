@@ -513,3 +513,20 @@ input[type='range']:focus-visible::-moz-range-thumb { border-color: var(--acento
   .barra.indeterminada span { width: 100%; opacity: 0.4; }
   .btn-icone:active, .tecla:active, .btn-secundario:active, .btn-play:active { transform: none !important; }
 }
+
+/* ---------- escolher arquivo → escolher modo → Separar ---------- */
+.escolhida {
+  border: 1px solid var(--acento); border-radius: 8px; padding: 12px 14px; background: var(--painel);
+  box-shadow: inset 3px 0 0 var(--acento); display: grid; gap: 2px;
+}
+.escolhida-nome { margin: 0; font: 650 1.05rem var(--f-titulo); font-stretch: 90%; overflow-wrap: anywhere; }
+.escolhida-info { margin: 0; color: var(--texto-2); font: 400 0.82rem var(--f-num); }
+.link-acao {
+  justify-self: start; background: none; border: 0; padding: 4px 0; min-height: 32px; color: var(--acento-forte);
+  font-size: 0.88rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.modo-tempo { font: 500 0.95rem var(--f-num); color: var(--texto); }
+.modo-tempo:empty { display: none; }
+.selo-rapido { color: var(--instrumental); border-color: color-mix(in srgb, var(--instrumental) 55%, transparent); }
+.modo:has(input:checked) .selo-rapido { color: var(--instrumental); border-color: var(--instrumental); }
+.btn-separar { width: 100%; min-height: 52px; font-size: 1.05rem; }

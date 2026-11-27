@@ -1,10 +1,10 @@
 // Monta a entrada do modelo a partir do áudio e reconstrói as faixas a partir da saída.
 // Funções puras (sem ONNX), para poderem ser testadas no Node.
-import { stft, istft } from '../dsp/stft.js';
+import { stftEstereo, istftEstereo } from '../dsp/stft.js';
 
 /** RoFormer: entrada [1, 2050, T, 2] com layout (bin*2 + canal, frame, re/im). */
 export function roformerEntrada(canais, nFft, hop) {
-  const specs = canais.map((c) => stft(c, nFft, hop));
+  const specs = stftEstereo(canais[0], canais[1], nFft, hop);
   const { bins, frames } = specs[0];
   const dados = new Float32Array(bins * 2 * frames * 2);
   for (let b = 0; b < bins; b++) {
@@ -28,7 +28,7 @@ export function roformerEntrada(canais, nFft, hop) {
 export function roformerSaida(specs, mascaras, nFft, hop, tamanho) {
   const { bins, frames } = specs[0];
   const plano = bins * 2 * frames * 2;
-  const voz = [], backing = [];
+  const espV = [], espB = [];
   for (let c = 0; c < 2; c++) {
     const s = specs[c];
     const vRe = new Float32Array(bins * frames), vIm = new Float32Array(bins * frames);
@@ -45,15 +45,17 @@ export function roformerSaida(specs, mascaras, nFft, hop, tamanho) {
         bRe[k] = vr * m1r - vi * m1i; bIm[k] = vr * m1i + vi * m1r;
       }
     }
-    voz.push(istft(vRe, vIm, nFft, hop, frames, tamanho));
-    backing.push(istft(bRe, bIm, nFft, hop, frames, tamanho));
+    espV.push({ re: vRe, im: vIm });
+    espB.push({ re: bRe, im: bIm });
   }
+  const voz = istftEstereo(espV[0], espV[1], nFft, hop, frames, tamanho);
+  const backing = istftEstereo(espB[0], espB[1], nFft, hop, frames, tamanho);
   return { voz, backing };
 }
 
 /** MDX-Net: entrada [1, 4, dimF, T] com canais (L re, L im, R re, R im). */
 export function mdxEntrada(canais, nFft, hop, dimF) {
-  const specs = canais.map((c) => stft(c, nFft, hop));
+  const specs = stftEstereo(canais[0], canais[1], nFft, hop);
   const { frames } = specs[0];
   const dados = new Float32Array(4 * dimF * frames);
   for (let c = 0; c < 2; c++) {
@@ -73,7 +75,7 @@ export function mdxEntrada(canais, nFft, hop, dimF) {
 /** MDX-Net: a saída já é o espectro da voz. Devolve [L,R] no tempo. */
 export function mdxSaida(saida, nFft, hop, dimF, frames, tamanho, compensar) {
   const bins = nFft / 2 + 1;
-  const voz = [];
+  const esp = [];
   for (let c = 0; c < 2; c++) {
     const re = new Float32Array(bins * frames), im = new Float32Array(bins * frames);
     const oRe = (c * 2) * dimF * frames, oIm = (c * 2 + 1) * dimF * frames;
@@ -83,9 +85,9 @@ export function mdxSaida(saida, nFft, hop, dimF, frames, tamanho, compensar) {
         im[f * frames + t] = saida[oIm + f * frames + t];
       }
     }
-    const y = istft(re, im, nFft, hop, frames, tamanho);
-    for (let i = 0; i < y.length; i++) y[i] *= compensar;
-    voz.push(y);
+    esp.push({ re, im });
   }
+  const voz = istftEstereo(esp[0], esp[1], nFft, hop, frames, tamanho);
+  for (const y of voz) for (let i = 0; i < y.length; i++) y[i] *= compensar;
   return voz;
 }

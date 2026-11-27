@@ -31,15 +31,23 @@ await p.goto(URL, { waitUntil: 'load' });
 await espera(2500);
 await foto('tela', '01-inicio');
 
-// separação real (modo leve, áudio curto) para mostrar o progresso
-await p.click('input[name=modo][value=leve]', { force: true });
+// escolher a música (só prepara) → print com o cartão "Música escolhida" e os modos → Separar
 await p.setInputFiles('#arquivo', { name: 'Minha música.mp3', mimeType: 'audio/wav', buffer: (await import('node:fs')).readFileSync(WAV) });
+await p.waitForFunction(() => !document.getElementById('btn-separar').disabled, null, { timeout: 60000 });
+// estimativa como numa música de 4 min (o áudio de teste tem 7 s)
+await p.evaluate(() => {
+  document.getElementById('escolhida-info').textContent = '4:12 · 9 MB';
+  document.getElementById('tempo-rapido').textContent = '≈ 1 min para esta música';
+  document.getElementById('tempo-qualidade').textContent = '≈ 3 min para esta música';
+});
+await espera(300);
+await foto('tela', '01-escolhida');
+await p.click('#btn-separar');
 await p.waitForFunction(() => /Parte 1 de/.test(document.getElementById('prog-detalhe').textContent), null, { timeout: 180000 });
 // mostra o caso típico (com placa de vídeo): tira o aviso de "sem placa de vídeo" do texto
 await p.evaluate(() => {
-  const d = document.getElementById('prog-detalhe');
-  d.textContent = 'Parte 12 de 29 · 4 min de música · falta ~1 min';
-  document.getElementById('prog-preench').style.width = '41%';
+  document.getElementById('prog-detalhe').textContent = 'Parte 18 de 46 · 4 min de música · falta ~40 s';
+  document.getElementById('prog-preench').style.width = '39%';
 });
 await foto('#etapa-progresso', '02-progresso');
 await p.waitForFunction(() => !document.getElementById('etapa-estudio').hidden, null, { timeout: 180000 });

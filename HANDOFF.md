@@ -20,7 +20,7 @@ canto do Matheus, que quer usar com os alunos. Os apps online (vocalremover.org 
 ### Funcionalidades prontas
 | Área | O que faz |
 |---|---|
-| Separação | Dois modos. **Alta qualidade**: voz principal + backing vocal + instrumental, com WebGPU. **Leve**: voz + instrumental, em qualquer navegador |
+| Separação | Escolher o arquivo só prepara; **Separar** dispara. Dois modos: **Rápido** (MDX-Net 1/9703, voz + instrumental, ~1 min por música de 4 min, qualquer navegador) e **Melhor qualidade** (RoFormer, voz principal + backing + instrumental, ~3 min, WebGPU). O antigo **Leve** (Kim Vocal 2) saiu da tela (`oculto: true`), mas segue no catálogo para abrir músicas antigas |
 | Mixer | Volume de 0 a 150%, Mudo e Solo por faixa; atalhos *Só instrumental*, *Voz baixinha de guia*, *Só a voz*, *Original* |
 | Tom e velocidade | Tom ±12 semitons sem mudar a velocidade; velocidade de 50% a 125% sem mudar o tom (SoundTouch) |
 | Loop A-B | Arrastar na forma de onda ou botões A/B; contagem 1-2-3-4 opcional |
@@ -41,6 +41,7 @@ canto do Matheus, que quer usar com os alunos. Os apps online (vocalremover.org 
 | **Exportar e importar projeto, Limpar tudo, seleção, botão Cancelar** | ✅ No ar e testado (ver §8) |
 | Refinamento visual "profissional, sem cara de IA" | ✅ No ar (27/11, especialista de front-end): visual de "estúdio de ensaio", fader vertical, régua na onda, Archivo + IBM Plex Mono. Rodapé de créditos removido (créditos ficam em `TERCEIROS.md`) |
 | Nome do .zip escolhido antes de baixar | ✅ No ar (diálogo "Nome do arquivo", ex.: `pacote_aluno_matheus`) |
+| Modo Rápido + fluxo "escolher → modo → Separar" + DSP em worker paralelo | ✅ No ar (27/11). Manual em PDF atualizado (`ferramentas/manual/`) |
 | Teste no Safari de verdade (Mac da professora / iPhone) | ⏳ Pendente: só foi testado no WebKit do Playwright, que no Windows não tem áudio |
 | Ouvir a qualidade da separação numa música real | ⏳ Pendente (amostras em `_amostras/`, que só existem na máquina original) |
 
@@ -168,6 +169,12 @@ Máquina: i5-1235U, Intel Iris Xe, 16 GB, Chrome.
     `voz|backing|instrumental.mp3`, confere o tamanho declarado **antes** de descompactar (64 KB para o json, 60 MB por
     MP3, 600 MB no total), aceita `sr` de 8–192 kHz e duração de no máximo 30 min. Isso protege contra "bomba de zip"
     num arquivo recebido de outra pessoa. Apontado por revisão de segurança automática em 27/11.
+17. **Medir velocidade com a máquina fria.** O notebook (i5-U, Iris Xe) reduz a velocidade da placa de vídeo depois de
+    horas de carga: o mesmo modelo foi de 1,0 s para 2,1 s por pedaço. Compare modos sempre nas mesmas condições
+    e rode o `bench.html` antes, como referência.
+18. **Processamento de sinal fica em `dsp-worker.js`.** Na mesma thread do ONNX Runtime WebGPU ele não se sobrepunha à
+    placa de vídeo, porque o ORT usa o JavaScript para despachar os comandos. Se o navegador não criar o worker interno, o mesmo
+    cálculo roda no worker principal (código em `obterDsp()`).
 15. **Pasta `public/_teste/`** (MUSDB, a música de teste, zip de teste) é local e está no `.gitignore`. O `publicar.mjs` a tira do build.
 
 ---

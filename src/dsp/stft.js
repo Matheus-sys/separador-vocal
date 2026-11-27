@@ -88,3 +88,86 @@ export function istft(re, im, nFft, hop, frames, tamanho) {
   }
   return y;
 }
+
+/**
+ * STFT dos dois canais de uma vez: uma FFT complexa com L na parte real e R na imaginária
+ * (metade das FFTs). X_L[k] = (Z[k] + conj Z[N-k]) / 2 ; X_R[k] = (Z[k] - conj Z[N-k]) / 2i.
+ * Devolve [specL, specR] no mesmo formato de stft().
+ */
+export function stftEstereo(L, R, nFft, hop) {
+  const n = L.length;
+  const pad = nFft / 2;
+  const frames = 1 + Math.floor(n / hop);
+  const bins = nFft / 2 + 1;
+  const w = hann(nFft);
+  const fft = fftDe(nFft);
+  const zr = new Float64Array(nFft), zi = new Float64Array(nFft);
+  const or = new Float64Array(nFft), oi = new Float64Array(nFft);
+  const lRe = new Float32Array(bins * frames), lIm = new Float32Array(bins * frames);
+  const rRe = new Float32Array(bins * frames), rIm = new Float32Array(bins * frames);
+  for (let t = 0; t < frames; t++) {
+    const ini = t * hop - pad;
+    for (let k = 0; k < nFft; k++) {
+      const idx = ini + k;
+      const j = idx >= 0 && idx < n ? idx : refletir(idx, n);
+      zr[k] = L[j] * w[k];
+      zi[k] = R[j] * w[k];
+    }
+    fft.direta(zr, zi, or, oi);
+    for (let b = 0; b < bins; b++) {
+      const m = b === 0 ? 0 : nFft - b;
+      const ar = or[b], ai = oi[b], cr = or[m], ci = -oi[m]; // conj Z[N-k]
+      const o = b * frames + t;
+      lRe[o] = 0.5 * (ar + cr);
+      lIm[o] = 0.5 * (ai + ci);
+      // (a - c) / 2i = (ai - ci)/2 - i (ar - cr)/2
+      rRe[o] = 0.5 * (ai - ci);
+      rIm[o] = -0.5 * (ar - cr);
+    }
+  }
+  return [
+    { re: lRe, im: lIm, bins, frames },
+    { re: rRe, im: rIm, bins, frames },
+  ];
+}
+
+/** iSTFT dos dois canais de uma vez (uma FFT inversa: real = L, imaginária = R). */
+export function istftEstereo(sL, sR, nFft, hop, frames, tamanho) {
+  const pad = nFft / 2;
+  const bins = nFft / 2 + 1;
+  const w = hann(nFft);
+  const fft = fftDe(nFft);
+  const total = nFft + hop * (frames - 1);
+  const somaL = new Float64Array(total), somaR = new Float64Array(total);
+  const env = new Float64Array(total);
+  const zr = new Float64Array(nFft), zi = new Float64Array(nFft);
+  const or = new Float64Array(nFft), oi = new Float64Array(nFft);
+  for (let t = 0; t < frames; t++) {
+    // Z = X_L + i X_R, com cada espectro estendido de forma hermitiana (DC e Nyquist reais)
+    for (let b = 0; b < nFft; b++) {
+      const h = b < bins ? b : nFft - b;
+      const o = h * frames + t;
+      let lr = sL.re[o], li = b < bins ? sL.im[o] : -sL.im[o];
+      let rr = sR.re[o], ri = b < bins ? sR.im[o] : -sR.im[o];
+      if (h === 0 || h === bins - 1) { li = 0; ri = 0; }
+      zr[b] = lr - ri;
+      zi[b] = li + rr;
+    }
+    fft.inversa(zr, zi, or, oi);
+    const ini = t * hop;
+    for (let k = 0; k < nFft; k++) {
+      somaL[ini + k] += or[k] * w[k];
+      somaR[ini + k] += oi[k] * w[k];
+      env[ini + k] += w[k] * w[k];
+    }
+  }
+  const yL = new Float32Array(tamanho), yR = new Float32Array(tamanho);
+  for (let i = 0; i < tamanho; i++) {
+    const j = i + pad;
+    if (j < total && env[j] > 1e-11) {
+      yL[i] = somaL[j] / env[j];
+      yR[i] = somaR[j] / env[j];
+    }
+  }
+  return [yL, yR];
+}

@@ -23,6 +23,9 @@ console.log(JSON.stringify(estado, null, 1));
 if (arquivo) {
   const t0 = Date.now();
   await pagina.setInputFiles('#arquivo', arquivo);
+  // desde 27/11 escolher o arquivo só prepara; a separação começa no botão Separar
+  await pagina.waitForFunction(() => !document.getElementById('btn-separar').disabled, null, { timeout: 60000 });
+  await pagina.click('#btn-separar');
   const fim = await pagina.waitForFunction(() => !document.getElementById('etapa-estudio').hidden || !document.getElementById('etapa-arquivo').hidden, null, { timeout: 280000, polling: 500 }).then(() => 'ok', (e) => 'timeout: ' + e.message);
   const r = await pagina.evaluate(() => ({ estudio: !document.getElementById('etapa-estudio').hidden, faixas: [...document.querySelectorAll('#mixer .faixa .nome')].map((e) => e.textContent), toast: document.getElementById('toast').textContent, detalhe: document.getElementById('prog-detalhe').textContent }));
   console.log('separacao:', fim, Math.round((Date.now() - t0) / 1000) + 's', JSON.stringify(r));
