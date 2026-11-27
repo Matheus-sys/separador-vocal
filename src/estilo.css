@@ -244,3 +244,21 @@ input[type='range'] { accent-color: var(--acento); width: 100%; min-height: 28px
   .cartao { padding: 16px; }
   .transporte { gap: 14px; }
 }
+
+/* biblioteca: seleção, ações, importar e limpar */
+.bib-topo { margin: 14px 0 6px; }
+.bib-topo .btn-secundario { width: 100%; }
+.bib-selecao { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 0.9rem; }
+.bib-selecao label { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+.bib-selecao input, .lista-bib .marca { accent-color: var(--acento); width: 18px; height: 18px; margin: 0; flex: none; }
+.lista-bib .marca { margin-right: 2px; }
+.bib-barra { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.bib-barra button { padding: 8px 10px; font-size: 0.875rem; }
+.bib-rodape { border-top: 1px solid var(--borda); margin-top: 20px; padding-top: 12px; display: grid; gap: 10px; }
+.btn-perigo {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 10px;
+  padding: 10px 16px; font-weight: 600; font-size: 0.95rem; background: transparent;
+  border: 1px solid color-mix(in srgb, var(--acento) 55%, transparent); color: var(--acento-forte);
+}
+.btn-perigo:hover:not(:disabled) { background: var(--acento-suave); }
+#bib-cancelar, #exp-cancelar { margin-top: 8px; }

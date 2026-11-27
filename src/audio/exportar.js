@@ -2,6 +2,11 @@
 import { SoundTouch, SimpleFilter } from 'soundtouchjs';
 import { Mp3Encoder } from '@breezystack/lamejs';
 
+/** Erro lançado quando o usuário cancela (AbortSignal). */
+export function verificarCancelado(sinal) {
+  if (sinal?.aborted) throw new DOMException('Cancelado pelo usuário', 'AbortError');
+}
+
 export function paraInt16(f) {
   const o = new Int16Array(f.length);
   for (let i = 0; i < f.length; i++) {
@@ -31,7 +36,7 @@ export function wavDe(canais, sr) {
   return new Blob([buf], { type: 'audio/wav' });
 }
 
-export async function mp3De(canais, sr, kbps = 192, onProgresso) {
+export async function mp3De(canais, sr, kbps = 192, onProgresso, sinal) {
   const enc = new Mp3Encoder(2, sr, kbps);
   const L = paraInt16(canais[0]), R = paraInt16(canais[1] || canais[0]);
   const partes = [];
@@ -39,9 +44,10 @@ export async function mp3De(canais, sr, kbps = 192, onProgresso) {
   for (let i = 0; i < L.length; i += bloco) {
     const m = enc.encodeBuffer(L.subarray(i, i + bloco), R.subarray(i, i + bloco));
     if (m.length) partes.push(new Uint8Array(m));
-    if ((i / bloco) % 50 === 0) {
+    if ((i / bloco) % 20 === 0) {
       onProgresso?.(i / L.length);
       await new Promise((r) => setTimeout(r, 0)); // não travar a tela
+      verificarCancelado(sinal);
     }
   }
   const fim = enc.flush();
@@ -65,7 +71,7 @@ export function misturar(faixas, ganhos) {
 }
 
 /** Aplica tom (semitons) e velocidade (1 = normal) no áudio inteiro, fora do tempo real. */
-export async function aplicarTomVelocidade(canais, tom, vel, onProgresso) {
+export async function aplicarTomVelocidade(canais, tom, vel, onProgresso, sinal) {
   if (tom === 0 && vel === 1) return canais;
   const [L, R] = canais;
   const n = L.length;
@@ -101,6 +107,7 @@ export async function aplicarTomVelocidade(canais, tom, vel, onProgresso) {
     if (++voltas % 40 === 0) {
       onProgresso?.(Math.min(1, filtro.sourcePosition / n));
       await new Promise((r) => setTimeout(r, 0));
+      verificarCancelado(sinal);
     }
   }
   // a saída começa alinhada; o que passa do tamanho esperado é o silêncio de esvaziamento

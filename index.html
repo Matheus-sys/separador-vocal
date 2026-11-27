@@ -45,19 +45,39 @@
           <svg viewBox="0 0 24 24"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z" /></svg>
         </button>
       </div>
-      <p class="dica">Ficam guardadas neste navegador. Abrem na hora, sem separar de novo.</p>
+      <p class="dica">Ficam guardadas neste navegador e abrem na hora. Para levar para outro computador ou mandar para alguém, baixe o projeto (.zip).</p>
+      <div class="bib-topo">
+        <button class="btn-secundario" id="bib-importar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 20h2v-8.2l3.3 3.3 1.4-1.4L12 8 6.3 13.7l1.4 1.4 3.3-3.3zM5 4h14v2H5z" /></svg>
+          Importar projeto (.zip)
+        </button>
+        <input type="file" id="bib-arquivo" accept=".zip,application/zip" hidden />
+      </div>
+      <div class="bib-selecao">
+        <label><input type="checkbox" id="bib-sel-todas" /> Selecionar todas</label>
+        <span id="bib-qtd" class="dica"></span>
+      </div>
       <ul id="lista-bib" class="lista-bib"></ul>
-      <p class="dica" id="espaco"></p>
+      <div class="bib-barra">
+        <button class="btn-primario" id="bib-baixar" disabled>Baixar projeto (.zip)</button>
+        <button class="btn-secundario" id="bib-apagar" disabled>Apagar selecionadas</button>
+      </div>
+      <p class="prog-detalhe" id="bib-status" aria-live="polite"></p>
+      <button class="btn-secundario" id="bib-cancelar" hidden>Cancelar</button>
+      <div class="bib-rodape">
+        <p class="dica" id="espaco"></p>
+        <button class="btn-perigo" id="bib-limpar" disabled>Limpar tudo</button>
+      </div>
     </aside>
 
     <main>
       <!-- 1. Escolher música -->
       <section id="etapa-arquivo" class="cartao">
         <label class="soltar" id="soltar" tabindex="0">
-          <input type="file" id="arquivo" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,.webm" hidden />
+          <input type="file" id="arquivo" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,.webm,.zip,application/zip" hidden />
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.6a4 4 0 1 0 2 3.4V7h4V3z" /></svg>
           <strong>Arraste uma música aqui</strong>
-          <span>ou clique para escolher (MP3, WAV, M4A…)</span>
+          <span>ou clique para escolher (MP3, WAV, M4A…), ou um projeto do Ensaio Vocal (.zip)</span>
         </label>
 
         <fieldset class="modos">
@@ -186,7 +206,16 @@
             </div>
             <p class="rotulo">Faixas separadas (MP3, sem tom nem velocidade)</p>
             <div id="exp-faixas" class="exportar"></div>
+            <p class="rotulo">Projeto</p>
+            <div class="exportar">
+              <button class="btn-secundario" id="exp-projeto">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6l2 2h8v14H4zm2 4v10h12V8z" /></svg>
+                Projeto para reabrir depois (.zip)
+              </button>
+            </div>
+            <p class="dica">Leva as faixas e os ajustes (volumes, tom, velocidade e trecho). Dá para mandar para outra pessoa abrir no Ensaio Vocal.</p>
             <p class="prog-detalhe" id="exp-status" aria-live="polite"></p>
+            <button class="btn-secundario" id="exp-cancelar" hidden>Cancelar</button>
           </div>
         </div>
         <p class="dica atalhos">Atalhos: <kbd>espaço</kbd> toca/pausa · <kbd>←</kbd> <kbd>→</kbd> 5 s · <kbd>A</kbd> <kbd>B</kbd> marcam o trecho · <kbd>L</kbd> repete</p>

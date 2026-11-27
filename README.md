@@ -25,7 +25,15 @@ enviada para servidor nenhum e **não há limite de uso**.
    - **Repetir trecho**: arraste na forma de onda para marcar o trecho, ou use os botões **A** e **B** durante
      a música. A opção *Contagem 1-2-3-4* toca quatro cliques antes de começar.
    - **Baixar**: a mixagem atual (com volumes, tom e velocidade) em MP3 ou WAV, ou cada faixa separada em MP3.
-6. As músicas separadas ficam em **Minhas músicas** e abrem na hora, sem separar de novo.
+6. As músicas separadas ficam em **Minhas músicas** e abrem na hora, sem separar de novo. Os ajustes (volumes,
+   tom, velocidade e trecho) ficam salvos em cada música.
+7. **Levar para outro computador ou mandar para alguém**: em *Baixar → Projeto para reabrir depois (.zip)*, ou
+   em *Minhas músicas*, marque uma ou várias e toque em *Baixar*. O .zip leva as faixas e os ajustes. Para abrir,
+   solte o .zip no Ensaio Vocal (ou use *Importar projeto*). Também funciona no celular, para treinar.
+   Dica para a professora: prepare o exercício (trecho, tom, velocidade) e mande o .zip para os alunos.
+8. **Limpar**: em *Minhas músicas*, apague as selecionadas ou use *Limpar tudo*. Não dá para desfazer, então baixe o projeto antes, se quiser guardar.
+
+Toda geração de arquivo tem um botão **Cancelar**.
 
 Atalhos de teclado: `espaço` toca e pausa · `←` `→` voltam e avançam 5 s · `A` `B` marcam o trecho · `L` liga e desliga a repetição.
 

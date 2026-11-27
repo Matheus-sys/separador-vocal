@@ -64,11 +64,11 @@ export async function idDoArquivo(buf, modeloId) {
   return modeloId + ':' + [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export async function guardar({ id, nome, modeloId, sr, faixas }) {
+export async function guardar({ id, nome, modeloId, sr, faixas, ajustes = null, data = null }) {
   const dados = {};
   for (const [k, [L, R]] of Object.entries(faixas)) dados[k] = [paraInt16(L).buffer, paraInt16(R).buffer];
   const n = faixas[Object.keys(faixas)[0]][0].length;
-  const meta = { id, nome, modeloId, sr, duracao: n / sr, data: Date.now(), bytes: Object.keys(faixas).length * n * 4, faixas: Object.keys(faixas) };
+  const meta = { id, nome, modeloId, sr, duracao: n / sr, data: data || Date.now(), bytes: Object.keys(faixas).length * n * 4, faixas: Object.keys(faixas), ajustes };
   await transacao([AUDIO, META], 'readwrite', (tx) => {
     tx.objectStore(AUDIO).put({ id, faixas: dados });
     tx.objectStore(META).put(meta);
@@ -112,10 +112,39 @@ export async function existe(id) {
 }
 
 export async function apagar(id) {
+  await apagarVarios([id]);
+}
+
+export async function apagarVarios(ids) {
   await transacao([AUDIO, META], 'readwrite', (tx) => {
-    tx.objectStore(AUDIO).delete(id);
-    tx.objectStore(META).delete(id);
+    for (const id of ids) {
+      tx.objectStore(AUDIO).delete(id);
+      tx.objectStore(META).delete(id);
+    }
   });
+}
+
+export async function apagarTudo() {
+  await transacao([AUDIO, META], 'readwrite', (tx) => {
+    tx.objectStore(AUDIO).clear();
+    tx.objectStore(META).clear();
+  });
+}
+
+/** Guarda volumes, tom, velocidade e trecho da música (só o meta; não toca no áudio). */
+export async function salvarAjustes(id, ajustes) {
+  await transacao([META], 'readwrite', (tx) => {
+    const loja = tx.objectStore(META);
+    const req = loja.get(id);
+    req.onsuccess = () => {
+      if (req.result) loja.put({ ...req.result, ajustes });
+    };
+  });
+}
+
+/** Só os dados leves de uma música. */
+export async function lerMeta(id) {
+  return transacao([META], 'readonly', (tx) => tx.objectStore(META).get(id));
 }
 
 export async function espacoUsado() {
