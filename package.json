@@ -1,0 +1,28 @@
+{
+  "name": "separador-vocal",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Separador de voz e instrumental para treino de canto, 100% no navegador",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite --port 5199",
+    "build": "vite build",
+    "preview": "vite preview --port 5198",
+    "test": "vitest run",
+    "publicar": "node ferramentas/publicar.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  },
+  "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
+    "coi-serviceworker": "^0.1.7",
+    "onnxruntime-web": "^1.31.1",
+    "soundtouchjs": "^0.1.30"
+  },
+  "private": true
+}

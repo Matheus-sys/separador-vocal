@@ -1,0 +1,14 @@
+node_modules/
+dist/
+_modelos/
+_teste/
+public/_teste/
+public/modelos/duality_*
+bench.html
+teste-qualidade.html
+*.log
+public/ort/
+_amostras/
+.playwright-mcp/
+__pycache__/
+.publicar-tmp/
