@@ -1,7 +1,7 @@
 // Publica o site: testa, gera dist/ e envia para a branch gh-pages (GitHub Pages "deploy from branch").
 // Uso: npm run publicar
 import { execSync } from 'node:child_process';
-import { writeFileSync, existsSync, renameSync, mkdirSync, readdirSync } from 'node:fs';
+import { writeFileSync, existsSync, renameSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 
 const run = (c, o = {}) => execSync(c, { stdio: 'inherit', ...o });
 run('npx vitest run');
@@ -20,6 +20,8 @@ try {
 }
 writeFileSync('dist/.nojekyll', '');
 const rev = execSync('git rev-parse --short HEAD').toString().trim();
+// o Vite limpa dist/ mas preserva dist/.git da publicação anterior
+rmSync('dist/.git', { recursive: true, force: true });
 run('git init -q', { cwd: 'dist' });
 run('git checkout -q -b gh-pages', { cwd: 'dist' });
 run('git add -A', { cwd: 'dist' });
